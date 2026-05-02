@@ -122,6 +122,72 @@
     if (el) el.textContent = `${_selected.size} selecionados`;
   }
 
+  async function checkRefs() {
+    if (!_scanData || _selected.size === 0) {
+      setStatus('Marca pelo menos um rename pra checar refs.', false);
+      return;
+    }
+    const paths = Array.from(_selected).map(idx => _scanData.suggestions[idx].from);
+    setStatus(`🔄 checando refs em ${paths.length} paths...`);
+    try {
+      const r = await fetch(`${activeProjectUrl()}/check_refs`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({paths}),
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const data = await r.json();
+      renderRefsPanel(data);
+      setStatus(`✓ ${data.paths_with_refs}/${data.paths_checked} paths tem refs · ${data.files_count} js files affected`);
+    } catch (e) {
+      setStatus(`✗ check_refs falhou: ${e.message}`, false);
+    }
+  }
+
+  function renderRefsPanel(data) {
+    const panel = $('namingRefsPanel');
+    const content = $('namingRefsContent');
+    if (!panel || !content) return;
+    panel.style.display = 'block';
+    if (data.files_count === 0) {
+      content.innerHTML = '<div style="opacity:.6;text-align:center;padding:20px;color:#88cc66;">✓ Nenhum js file referencia esses paths -- safe to apply!</div>';
+      return;
+    }
+    // Agrupa por arquivo
+    const byFile = {};
+    for (const [path, hits] of Object.entries(data.details)) {
+      for (const h of hits) {
+        if (!byFile[h.file]) byFile[h.file] = [];
+        byFile[h.file].push({path, ...h});
+      }
+    }
+    const files = Object.keys(byFile).sort();
+    content.innerHTML = `
+      <div style="margin-bottom:10px;color:#cc8866;">
+        ⚠ ${files.length} js files referenciam ${data.paths_with_refs} paths a serem renomeados.
+        <strong>Apply renames vai quebrar esses refs ate atualizar.</strong>
+      </div>
+    ` + files.map(f => `
+      <details style="margin-bottom:6px;background:#2a2218;border:1px solid #4a3826;border-radius:3px;">
+        <summary style="padding:6px 8px;cursor:pointer;color:#f4c95d;font-weight:bold;">
+          ${escHtml(f)} <span style="opacity:.6;font-weight:normal;">(${byFile[f].length} refs)</span>
+        </summary>
+        <div style="padding:6px 8px;border-top:1px solid #4a3826;">
+          ${byFile[f].map(h => `
+            <div style="padding:3px 0;border-bottom:1px dotted #3a3018;">
+              <div style="display:flex;gap:8px;align-items:baseline;">
+                <span style="color:#88aacc;min-width:50px;">L${h.line}</span>
+                <span style="color:${h.kind === 'literal' ? '#cc8866' : '#aa88cc'};font-size:10px;">[${h.kind}]</span>
+                <span style="color:#cc8866;font-size:10px;overflow:hidden;text-overflow:ellipsis;">${escHtml(h.path)}</span>
+              </div>
+              <div style="margin-left:60px;color:#aaa;font-size:10px;margin-top:2px;">${escHtml(h.snippet)}</div>
+            </div>
+          `).join('')}
+        </div>
+      </details>
+    `).join('');
+  }
+
   async function applySelected() {
     if (!_scanData || _selected.size === 0) {
       setStatus('Nada selecionado.', false);
@@ -152,6 +218,13 @@
     if (btnScan) btnScan.addEventListener('click', runScan);
     const btnApply = $('btnNamingApply');
     if (btnApply) btnApply.addEventListener('click', applySelected);
+    const btnCheckRefs = $('btnNamingCheckRefs');
+    if (btnCheckRefs) btnCheckRefs.addEventListener('click', checkRefs);
+    const btnCloseRefs = $('btnNamingCloseRefs');
+    if (btnCloseRefs) btnCloseRefs.addEventListener('click', () => {
+      const panel = $('namingRefsPanel');
+      if (panel) panel.style.display = 'none';
+    });
     const btnSelectAll = $('btnNamingSelectAll');
     if (btnSelectAll) btnSelectAll.addEventListener('click', () => {
       document.querySelectorAll('.sugg-chk').forEach(chk => {

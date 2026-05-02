@@ -412,11 +412,21 @@
           <span id="namingSelectedCount" style="opacity:.6;">0 selecionados</span>
           <button id="btnNamingSelectAll" style="padding:3px 8px;font-size:11px;">Select all</button>
           <button id="btnNamingDeselectAll" style="padding:3px 8px;font-size:11px;">Deselect</button>
+          <button id="btnNamingCheckRefs" style="padding:4px 10px;font-size:11px;background:#3a4a8a;color:#fff;">🔍 Check JS refs</button>
           <button id="btnNamingApply" style="padding:4px 12px;font-size:11px;background:#aa4a44;color:#fff;font-weight:bold;">⚠ Apply selected</button>
         </div>
       </div>
       <div id="namingStatus" style="font-size:11px;opacity:.7;margin-bottom:8px;"></div>
       <div id="namingSuggestionsList" style="max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:3px;font-size:11px;font-family:monospace;"></div>
+    </div>
+
+    <!-- JS refs check result panel -->
+    <div id="namingRefsPanel" style="background:#1a1408;border:1px solid #4a3826;padding:10px;border-radius:4px;margin-bottom:14px;display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <h4 style="margin:0;font-size:13px;color:#88aacc;">🔍 JS files affected by selected renames</h4>
+        <button id="btnNamingCloseRefs" style="padding:3px 8px;font-size:11px;">✕</button>
+      </div>
+      <div id="namingRefsContent" style="max-height:400px;overflow-y:auto;font-size:11px;font-family:monospace;"></div>
     </div>
 
     <!-- Unclassified items: lista pra revisao manual -->
