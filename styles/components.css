@@ -1,0 +1,60 @@
+/* PixaPro · components.css — thumb, side-grid, popup, stats, action button colors */
+.name{color:#f4c95d;font-size:16px;font-weight:bold;}
+.id{font-size:12px;opacity:.5;}
+.status{font-size:12px;padding:3px 8px;border-radius:3px;display:inline-block;margin-top:4px;}
+.status.ready{background:#2d5a2d;color:#9fe89f;}
+.status.pending{background:#5a4a2d;color:#f4c95d;}
+.counter{font-size:13px;color:#a89368;}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,48px);gap:4px;margin:14px 0 4px;width:96vw;max-width:96vw;justify-content:center;}
+.side-grid{display:grid;grid-template-columns:repeat(auto-fit,42px);gap:3px;flex:1;height:520px;overflow-y:auto;align-content:start;justify-content:center;padding:6px;border:2px solid;border-radius:4px;}
+.side-grid.left{border-color:#5a2222;background:rgba(74,29,29,0.15);}
+.side-grid.right{border-color:#2d5a2d;background:rgba(29,74,29,0.15);}
+.side-grid .side-title{grid-column:1/-1;font-size:12px;font-weight:bold;text-align:center;padding:2px 0 6px;letter-spacing:1px;}
+.side-grid.left .side-title{color:#e89f9f;}
+.side-grid.right .side-title{color:#9fe89f;}
+.side-grid .thumb{width:42px;height:42px;border-width:1px;}
+
+.thumb{width:48px;height:48px;background:#2a2218;border:2px solid #4a3826;cursor:pointer;display:flex;align-items:center;justify-content:center;image-rendering:pixelated;}
+.thumb img{max-width:100%;max-height:100%;image-rendering:pixelated;}
+.thumb.active{border-color:#f4c95d;}
+.thumb.pending{opacity:.4;}
+
+.refresh{font-size:17px;opacity:.6;margin-top:8px;font-weight:bold;}
+.stats{font-size:12px;opacity:.7;margin:4px 0;}
+
+/* Dark scrollbars (sutis) — aplica em side-grid, grid-thumbs e popup */
+.side-grid::-webkit-scrollbar,
+.grid-thumbs::-webkit-scrollbar,
+#floatingPopup::-webkit-scrollbar { width:8px; height:8px; }
+.side-grid::-webkit-scrollbar-track,
+.grid-thumbs::-webkit-scrollbar-track,
+#floatingPopup::-webkit-scrollbar-track { background:#1a1410; }
+.side-grid::-webkit-scrollbar-thumb,
+.grid-thumbs::-webkit-scrollbar-thumb,
+#floatingPopup::-webkit-scrollbar-thumb { background:#3a2d1e; border-radius:4px; }
+.side-grid::-webkit-scrollbar-thumb:hover,
+.grid-thumbs::-webkit-scrollbar-thumb:hover,
+#floatingPopup::-webkit-scrollbar-thumb:hover { background:#5a4226; }
+/* Firefox */
+.side-grid, .grid-thumbs, #floatingPopup { scrollbar-color:#3a2d1e #1a1410; scrollbar-width:thin; }
+
+/* Action button color variants — alpha 0.55 ambient · 0.92 hover (deixa stage por trás visível) */
+.btn-promote{background:rgba(61,209,61,0.55)!important;color:#000!important;border-color:rgba(29,138,29,0.85)!important;}
+.btn-promote:hover{background:rgba(94,232,94,0.92)!important;}
+.btn-discard{background:rgba(232,77,77,0.55)!important;color:#000!important;border-color:rgba(160,32,32,0.85)!important;}
+.btn-discard:hover{background:rgba(255,100,100,0.92)!important;}
+.btn-rename{background:rgba(77,169,232,0.55)!important;color:#000!important;border-color:rgba(29,106,160,0.85)!important;}
+.btn-rename:hover{background:rgba(101,189,245,0.92)!important;}
+.btn-save{background:rgba(244,201,93,0.55)!important;color:#000!important;border-color:rgba(168,134,46,0.85)!important;}
+.btn-save:hover{background:rgba(255,215,112,0.92)!important;}
+.btn-clear{background:rgba(214,58,214,0.55)!important;color:#000!important;border-color:rgba(138,34,138,0.85)!important;}
+.btn-clear:hover{background:rgba(232,79,232,0.92)!important;}
+
+/* Floating popup (global, position:fixed) */
+#floatingPopup{display:none;position:fixed;background:rgba(26,20,16,0.98);border:2px solid #f4c95d;border-radius:6px;padding:8px;z-index:9999;grid-template-columns:repeat(auto-fit,40px);gap:4px;min-width:260px;max-width:520px;max-height:480px;overflow-y:auto;box-shadow:0 6px 24px rgba(0,0,0,0.7);}
+#floatingPopup.show{display:grid;}
+#floatingPopup .pop-title{grid-column:1/-1;font-size:12px;color:#f4c95d;text-align:center;padding:2px 0 6px;font-weight:bold;}
+#floatingPopup img{width:40px;height:40px;image-rendering:pixelated;border:1px solid #4a3826;background:#2a2218;border-radius:2px;}
+#floatingPopup img[data-click]{cursor:pointer;}
+#floatingPopup img[data-click]:hover{outline:2px solid #f4c95d;}

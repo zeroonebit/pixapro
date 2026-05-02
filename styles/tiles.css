@@ -1,0 +1,58 @@
+/* PixaPro · tiles.css — Wang grid, tile editor, corner viz, test render */
+.tiles-wrap{display:flex;flex-direction:column;gap:14px;width:96vw;max-width:1400px;margin:20px auto;}
+.tileset-select-bar{display:flex;flex-direction:column;gap:8px;padding:10px;background:rgba(0,0,0,0.3);border:1px solid #4a3826;border-radius:6px;}
+.tileset-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.tileset-row .row-label{font-size:12px;color:#a89368;letter-spacing:2px;min-width:70px;}
+.tileset-btn{padding:6px 12px;font-size:12px;background:#2a2218;color:#a89368;border:1px solid #4a3826;cursor:pointer;font-family:monospace;border-radius:3px;}
+.tileset-btn:hover{background:#3a2d1e;color:#f4c95d;}
+.tileset-btn.active{background:#3a2d1e;color:#f4c95d;border-color:#f4c95d;}
+.tileset-btn.placeholder{opacity:.5;border-style:dashed;}
+
+.tiles-main{border:2px solid #4a3826;border-radius:6px;padding:14px;background:rgba(0,0,0,0.2);}
+.tiles-main h3{margin:0 0 12px;color:#f4c95d;font-size:14px;}
+
+.wang-grid{display:grid;grid-template-columns:repeat(4, 110px);gap:8px;justify-content:center;margin:14px 0;}
+.wang-cell{border:2px solid #4a3826;border-radius:4px;padding:6px;background:#1a1410;text-align:center;}
+.wang-cell .wtile{width:96px;height:96px;background:#2a2218;image-rendering:pixelated;display:block;margin:0 auto 4px;}
+.wang-cell canvas{width:96px;height:96px;image-rendering:pixelated;}
+.wang-cell .wlabel{font-size:12px;font-weight:bold;color:#f4c95d;}
+.wang-cell .wcorners{font-size:12px;opacity:.6;font-family:monospace;letter-spacing:.5px;}
+.wang-cell .wbits{font-size:12px;opacity:.5;}
+
+.corner-vis{display:grid;grid-template-columns:1fr 1fr;width:24px;height:24px;margin:2px auto;border:1px solid #6b5234;}
+.corner-vis div{width:100%;height:100%;}
+.corner-vis .lower{background:#5a4a2d;}
+.corner-vis .upper{background:#9fe89f;}
+
+.tile-info{margin:14px 0;padding:10px;background:rgba(0,0,0,0.3);border-radius:4px;font-size:12px;line-height:1.5;}
+.tile-info code{background:#2a2218;padding:2px 4px;border-radius:2px;color:#f4c95d;}
+
+/* Editor de tiles - drag-drop + transform buttons */
+.wang-cell.editable{position:relative;cursor:move;}
+.wang-cell.editable.drag-over{border-color:#ffd770!important;background:#3a2d1e;}
+.wang-cell.editable .tile-canvas{width:96px;height:96px;image-rendering:pixelated;background:#2a2218;display:block;margin:0 auto 4px;}
+.wang-cell.editable .tx-btn{position:absolute;background:rgba(244,201,93,0.85);color:#000;border:none;font-size:14px;font-weight:bold;cursor:pointer;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:3px;opacity:0;transition:opacity .1s;z-index:5;padding:0;}
+.wang-cell.editable:hover .tx-btn{opacity:1;}
+.wang-cell.editable .tx-btn:hover{background:#ffd770;transform:scale(1.15);}
+.wang-cell.editable .tx-cw{top:6px;left:50%;transform:translateX(-50%);}
+.wang-cell.editable .tx-ccw{bottom:34px;left:50%;transform:translateX(-50%);}
+.wang-cell.editable .tx-fh{top:50%;left:6px;transform:translateY(-50%);}
+.wang-cell.editable .tx-fv{top:50%;right:6px;transform:translateY(-50%);}
+.wang-cell.editable .corrected-mark{position:absolute;top:4px;right:4px;font-size:12px;background:#3da53d;color:#000;padding:1px 4px;border-radius:6px;font-weight:bold;}
+
+/* Reference guide compact */
+.wang-ref-grid{display:grid;grid-template-columns:repeat(4, 60px);gap:6px;justify-content:center;margin:8px 0;padding:10px;background:rgba(0,0,0,0.3);border-radius:4px;}
+.wang-ref-cell{text-align:center;font-size:12px;}
+.wang-ref-cell .ref-corners{display:grid;grid-template-columns:1fr 1fr;width:40px;height:40px;margin:0 auto 2px;border:1px solid #6b5234;}
+.wang-ref-cell .ref-corners div{width:100%;height:100%;}
+.wang-ref-cell .ref-corners .lower{background:#7a5a2d;}
+.wang-ref-cell .ref-corners .upper{background:#a8d088;}
+
+.editor-bar{display:flex;gap:8px;justify-content:center;margin:14px 0;align-items:center;flex-wrap:wrap;}
+.editor-bar button{padding:6px 14px;font-size:12px;}
+.save-corrected{background:#3dd13d!important;color:#000!important;border-color:#1d8a1d!important;}
+.reset-corrections{background:#a53d3d!important;color:#fff!important;}
+.view-mode-btn{background:#2a2218!important;color:#a89368!important;border:1px solid #4a3826!important;font-size:12px!important;padding:5px 10px!important;}
+.view-mode-btn.active{background:#3a2d1e!important;color:#f4c95d!important;border-color:#f4c95d!important;}
+.view-mode-btn:hover{background:#3a2d1e!important;}
+.orbit-info{display:block;font-size:12px;opacity:.6;margin-top:2px;}

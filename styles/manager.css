@@ -1,0 +1,31 @@
+/* PixaPro · manager.css — workspace, stage, decisions */
+.workspace{display:flex;gap:8px;align-items:stretch;width:96vw;justify-content:center;margin-bottom:10px;}
+/* box-sizing:border-box garante que stage E side-grid tenham EXATAMENTE 520px de altura visual
+   (sem isso, side-grid teria 520+padding+border = 536, stage só 520+border = 524 — diff 12px) */
+.workspace > * { box-sizing: border-box; }
+.stage{position:relative;width:520px;height:520px;flex:0 0 520px;background:repeating-conic-gradient(#2a2218 0% 25%,#332a1f 0% 50%) 50%/40px 40px;border:2px solid #4a3826;display:flex;align-items:center;justify-content:center;image-rendering:pixelated;}
+.stage img{max-width:90%;max-height:90%;image-rendering:pixelated;}
+.pending{color:#f4c95d;font-size:14px;text-align:center;padding:20px;}
+
+/* Stage hover overlays */
+.stage > .actions, .stage > .caption, .stage > .nav-prev, .stage > .nav-next{position:absolute;opacity:0;transition:opacity .15s;pointer-events:none;z-index:10;}
+.stage:hover > .actions, .stage:hover > .caption, .stage:hover > .nav-prev, .stage:hover > .nav-next{opacity:1;pointer-events:auto;}
+.stage > .actions{bottom:8px;left:8px;right:8px;display:flex;gap:4px;}
+.stage > .actions button{flex:1 1 0;padding:6px 2px;font-size:12px;font-weight:bold;min-width:0;opacity:.85;}
+.stage > .actions button:hover{opacity:1;}
+.stage > .caption{top:8px;left:8px;right:8px;text-align:center;background:rgba(0,0,0,.72);padding:6px 8px;border-radius:3px;}
+.stage > .caption .name{color:#f4c95d;font-size:13px;font-weight:bold;}
+.stage > .caption .id{font-size:12px;opacity:.6;display:block;margin-top:2px;}
+.stage > .caption .status{font-size:12px;}
+.stage > .caption .counter{font-size:12px;display:block;margin-top:3px;}
+.stage > .nav-prev, .stage > .nav-next{top:50%;transform:translateY(-50%);background:rgba(0,0,0,.6);border:1px solid #6b5234;color:#f4c95d;padding:14px 10px;font-size:17px;}
+.stage > .nav-prev{left:8px;}
+.stage > .nav-next{right:8px;}
+
+/* Decision badges (sobre o stage e thumbs) */
+.decision{position:absolute;top:8px;right:8px;font-size:12px;font-weight:bold;padding:3px 6px;border-radius:3px;}
+.decision.promoted{background:#1d4a1d;color:#9fe89f;}
+.decision.discarded{background:#4a1d1d;color:#e89f9f;}
+.decision.renamed{background:#1d3a4a;color:#9fcfe8;}
+.thumb-wrap{position:relative;}
+.thumb-decision{position:absolute;bottom:0;right:0;width:14px;height:14px;font-size:12px;display:flex;align-items:center;justify-content:center;border-radius:0 0 4px 0;}

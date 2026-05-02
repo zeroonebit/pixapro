@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>PixaPro</title>
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/manager.css">
+<link rel="stylesheet" href="styles/gallery.css">
+<link rel="stylesheet" href="styles/editor.css">
+<link rel="stylesheet" href="styles/tiles.css">
+<link rel="stylesheet" href="styles/detail.css">
+</head>
+<body>
+
+<h1>PixaPro</h1>
+
+<!-- PixelLab Balance Badge — populado via /pixellab_balance (bookmarklet posta) -->
+<div id="pixellabBalanceBadge" class="balance-badge" title="Click pra copiar bookmarklet · arraste pros bookmarks da Brave">
+  <span id="balanceText">PixelLab: —</span>
+  <span id="balanceMeta"></span>
+  <button id="btnBalanceRefresh" title="Refresh do server">↻</button>
+  <button id="btnBalanceBookmarklet" title="Copia bookmarklet (cola na barra de bookmarks)">📋 Bookmarklet</button>
+</div>
+
+<div class="tabs">
+  <button class="tab" data-tab="gallery">📊 Gallery</button>
+  <button class="tab" data-tab="editor">✏️ Editor</button>
+  <button class="tab active" data-tab="manager">🔍 Audit</button>
+  <button class="tab" data-tab="detail">🔧 Detail (queue)</button>
+  <button class="tab" data-tab="tiles">🧩 Tiles</button>
+</div>
+
+<!-- ====== TAB EDITOR (approved top · visualizer center · tools bottom) ====== -->
+<div class="tab-content" id="tab-editor" hidden>
+  <!-- Approved assets full-width topo (estilo Gallery) -->
+  <div class="summary-panel promoted" id="editorApprovedSection" style="width:96vw;max-width:1400px;margin:14px auto;min-height:auto;">
+    <h2>✅ APPROVED <span id="editorApprovedCount" style="margin-left:8px;color:#9fe89f;font-size:14px;">—</span></h2>
+    <div class="grid-thumbs" id="editorAssetListBody" style="max-height:240px;">aguardando…</div>
+  </div>
+  <!-- Main box com visualizer (center) -->
+  <div class="detail-main" id="editorMain" style="width:96vw;max-width:1400px;margin:14px auto;">
+    <h3 id="editorTitle">Selecione um asset acima</h3>
+    <div id="editorBody">
+      <div style="opacity:.6;font-size:12px;line-height:1.6;text-align:center;padding:40px;">
+        Visualizador + módulos PixelLab MCP. Click num asset acima pra abrir o painel.<br>
+        Hover no frame principal mostra slots das 8 direções — clique <strong>+</strong> nos vazios pra gerar via MCP.
+      </div>
+    </div>
+  </div>
+  <!-- 4 sections de tools full-width fora do box principal -->
+  <div id="editorToolsRow" style="width:96vw;max-width:1400px;margin:14px auto 30px;"></div>
+</div>
+
+<!-- ====== TAB GALLERY ====== -->
+<div class="tab-content" id="tab-gallery" hidden>
+  <div class="summary">
+    <div class="summary-panel promoted">
+      <h2>✅ APPROVED <span id="sumPromoted" style="margin-left:8px;color:#9fe89f;">—</span></h2>
+      <div class="filter-bar" id="promotedFilterBar">
+        <button data-filter="folders" class="active">📁 Folders</button>
+        <button data-filter="files">📄 Single files</button>
+        <button data-filter="type">🏷 Type</button>
+        <button data-filter="tags">🔖 Tags</button>
+      </div>
+      <div class="breakdown" id="sumPromotedBd">aguardando scan…</div>
+      <div class="grid-thumbs" id="sumPromotedGrid"></div>
+    </div>
+    <div class="summary-row">
+      <div class="summary-panel discarded">
+        <h2>❌ DISCARDED <span id="sumDiscarded" style="margin-left:8px;color:#e89f9f;">—</span></h2>
+        <div class="breakdown" id="sumDiscardedBd">aguardando scan…</div>
+        <div class="grid-thumbs" id="sumDiscardedGrid"></div>
+      </div>
+      <div class="summary-panel pending">
+        <h2>⏳ PENDING <span id="sumPending" style="margin-left:8px;color:#f4c95d;">—</span></h2>
+        <div class="breakdown" id="sumPendingBd">aguardando scan…</div>
+        <div class="grid-thumbs" id="sumPendingGrid"></div>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center;margin:8px 0 30px;font-size:12px;opacity:.6;">
+    Soma: filesystem (<code>assets/pixel_labs/</code>) + decisions locais + MCP <code>list_objects</code>/<code>list_characters</code>
+    <button id="btnRefreshSummary" style="margin-left:14px;padding:4px 12px;font-size:12px;">↻ Refresh</button>
+  </div>
+</div>
+
+<!-- popup flutuante global (compartilhado por todas as tabs) -->
+<div id="floatingPopup"></div>
+
+<!-- ====== TAB AUDIT (curadoria + IN-GAME priority panel) ====== -->
+<div class="tab-content" id="tab-manager">
+
+<div class="workspace">
+  <div class="side-grid left" id="gridLeft">
+    <div class="side-title">❌ DISCARDED (0)</div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="caption">
+      <div class="name" id="name">—</div>
+      <span class="id" id="id">—</span>
+    </div>
+    <div class="pending" id="pending" style="display:none;">⏳ aguardando geração…</div>
+    <img id="img" style="display:none;" alt="">
+    <div class="decision" id="decisionBadge" style="display:none;"></div>
+    <button class="nav-prev" id="prev">←</button>
+    <button class="nav-next" id="next">→</button>
+    <div class="actions">
+      <button class="btn-promote" id="btnPromote">✅ P</button>
+      <button class="btn-discard"  id="btnDiscard">❌ D</button>
+      <button class="btn-rename"   id="btnRename">✏️ R</button>
+      <button class="btn-clear" id="btnClear" title="Limpa decisão">↺ C</button>
+      <button class="btn-save" id="btnExport">💾 Save</button>
+    </div>
+  </div>
+
+  <div class="side-grid right" id="gridRight">
+    <div class="side-title">✅ APPROVED (0)</div>
+  </div>
+</div>
+
+<div class="stats" id="stats">—</div>
+
+<!-- 1 painel PENDING único (roxo) · outlines blue=in-game, yellow=not-in-game · anims colapsados -->
+<div class="summary-panel" id="auditPendingPanel" style="width:96vw;max-width:1400px;margin:14px auto;border-color:#a85ba8;background:rgba(74,29,74,0.18);min-height:auto;">
+  <h2 style="color:#dfa6df;">⏳ PENDING <span id="sumPendingTotal" style="margin-left:8px;color:#dfa6df;font-size:14px;">—</span></h2>
+  <div class="breakdown" id="sumPendingBd" style="opacity:.85;font-size:12px;margin-bottom:8px;">Click thumb pra abrir no stage. Anim frames colapsados ao parent asset.</div>
+  <!-- Filter buttons: All / In-game / Not in-game -->
+  <div id="auditFilterBar" style="display:flex;gap:6px;margin-bottom:10px;align-items:center;font-size:12px;">
+    <span style="color:#a89368;letter-spacing:1px;">FILTER:</span>
+    <button class="audit-filter active" data-filter="all"
+            style="padding:5px 14px;font-size:12px;background:#3a2d1e;color:#dfa6df;border:2px solid #a85ba8;border-radius:4px;cursor:pointer;font-family:monospace;">All</button>
+    <button class="audit-filter" data-filter="in-game"
+            style="padding:5px 14px;font-size:12px;background:rgba(77,169,232,0.15);color:#9fcfe8;border:2px solid #4da9e8;border-radius:4px;cursor:pointer;font-family:monospace;">🔵 In-game</button>
+    <button class="audit-filter" data-filter="not-in-game"
+            style="padding:5px 14px;font-size:12px;background:rgba(244,201,93,0.10);color:#f4c95d;border:2px solid #f4c95d;border-radius:4px;cursor:pointer;font-family:monospace;">🟡 Not in-game</button>
+    <span style="opacity:.4;margin:0 6px;">|</span>
+    <button id="btnToggleCollapseAnims" class="active"
+            style="padding:5px 14px;font-size:12px;background:rgba(168,91,168,0.20);color:#dfa6df;border:2px solid #a85ba8;border-radius:4px;cursor:pointer;font-family:monospace;font-weight:bold;box-shadow:0 0 8px rgba(244,201,93,0.5);"
+            title="Agrupa anim frames + direction sets (8-dir) no sprite parent">🎬🧭 Group anims+dirs</button>
+  </div>
+  <div class="grid-thumbs" id="sumPendingGridUnified" style="min-height:100px;max-height:480px;"></div>
+</div>
+
+<div class="refresh" id="refreshInfo" style="opacity:.4;">próximo refresh em 8s</div>
+</div><!-- /tab-manager -->
+
+<!-- ====== TAB DETAIL (queue MCP + tileset info/refs) ====== -->
+<div class="tab-content" id="tab-detail" hidden>
+  <div style="max-width:1000px;margin:20px auto;padding:14px;border:2px solid #4a3826;border-radius:6px;background:rgba(0,0,0,0.2);">
+    <h3 style="color:#f4c95d;margin:0 0 10px;">📋 MCP Queue Dashboard</h3>
+    <div style="font-size:12px;opacity:.7;margin-bottom:12px;">Ações enfileiradas no Editor pra executar via Claude MCP. Cola "executa o mcp queue" no chat pra rodar.</div>
+    <!-- Stats cards -->
+    <div class="dash-stats" id="dashStats"></div>
+    <!-- Progress bar -->
+    <div class="dash-progress"><div class="dash-progress-fill" id="dashProgressFill" style="width:0%"></div></div>
+    <!-- Category breakdown -->
+    <div class="dash-category-bar" id="dashCategoryBar"></div>
+    <!-- Queue cards -->
+    <div class="dash-queue-cards" id="dashQueueCards"></div>
+    <!-- Actions -->
+    <div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+      <button id="btnDetailRefreshQueue">↻ Refresh</button>
+      <button id="btnDetailClearQueue" style="background:#a53d3d;color:#fff;">Limpar tudo</button>
+      <button id="btnDetailClearDone" style="background:#3a2d1e;color:#a89368;">Limpar done</button>
+      <button id="btnDetailExportJSON" style="background:#2a2218;color:#9fcfe8;border:1px solid #1d3a4a;">📋 Copy JSON</button>
+    </div>
+  </div>
+  <!-- MCP Live Status (polling do gallery_server.py) -->
+  <div style="max-width:1000px;margin:20px auto;padding:14px;border:2px solid #1d3a4a;border-radius:6px;background:rgba(29,58,74,0.15);">
+    <h3 style="color:#9fcfe8;margin:0 0 10px;display:flex;align-items:center;gap:8px;">
+      <span id="mcpLiveDot" style="width:8px;height:8px;border-radius:50%;background:#666;display:inline-block;"></span>
+      MCP Live Status
+      <span id="mcpLiveCount" style="font-size:12px;opacity:.6;font-weight:normal;margin-left:auto;">—</span>
+    </h3>
+    <div id="mcpLiveCards" style="display:flex;flex-direction:column;gap:6px;">
+      <div style="opacity:.5;font-size:12px;text-align:center;padding:12px;">Conectando ao server (localhost:8090)...</div>
+    </div>
+    <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
+      <button id="btnMcpLiveRefresh" style="padding:4px 12px;font-size:12px;">↻ Refresh</button>
+      <button id="btnMcpLiveClear" style="padding:4px 12px;font-size:12px;background:#2a2218;color:#a89368;">Limpar</button>
+      <span id="mcpLiveLastPoll" style="font-size:12px;opacity:.4;margin-left:auto;">—</span>
+    </div>
+  </div>
+  <!-- Info sobre tileset ativo (movido da Tiles tab) -->
+  <div style="max-width:1000px;margin:20px auto;padding:14px;border:2px solid #4a3826;border-radius:6px;background:rgba(0,0,0,0.2);">
+    <h3 style="color:#f4c95d;margin:0 0 10px;">🧩 Active Tileset Info</h3>
+    <div id="tilesetInfo" style="font-size:12px;line-height:1.5;">selecione um tileset na Tab Tiles</div>
+  </div>
+  <!-- Refs & explanações -->
+  <div style="max-width:1000px;margin:20px auto;padding:14px;border:2px solid #4a3826;border-radius:6px;background:rgba(0,0,0,0.2);">
+    <h3 style="color:#f4c95d;margin:0 0 10px;">📚 Quick Reference</h3>
+    <div style="font-size:12px;line-height:1.8;opacity:.8;">
+      <strong>MCP tool naming:</strong> <code>mcp__pixellab__&lt;tool&gt;</code><br>
+      <strong>Categories:</strong> 🆕 create (objects, characters, tilesets) · 🎨 modify (vary, select frames, dismiss) · 🎬 anim (animate object/character) · 📖 meta (get/list) · 🗑 delete<br>
+      <strong>Workflow:</strong> Editor tab → preenche form → "Add to queue" → aqui no Dashboard → cola "executa o mcp queue" no chat<br>
+      <strong>Status:</strong> <span style="color:#f4c95d;">pending</span> = aguardando execução · <span style="color:#9fcfe8;">running</span> = em progresso · <span style="color:#9fe89f;">done</span> = concluído · <span style="color:#e89f9f;">failed</span> = erro
+    </div>
+  </div>
+  <div class="queue-bar" id="queueBar" hidden>
+    <span id="queueBarText">📋 0 ações na fila</span>
+    <div>
+      <button id="btnQueueShow">Ver queue</button>
+      <button id="btnQueueClear" style="background:#a53d3d;color:#fff;">Limpar</button>
+    </div>
+  </div>
+</div><!-- /tab-detail -->
+
+<!-- ====== TAB TILES (Wang cr31) ====== -->
+<div class="tab-content" id="tab-tiles" hidden>
+  <div class="tiles-wrap">
+    <div class="tileset-select-bar">
+      <div class="tileset-row">
+        <span class="row-label">PRESETS</span>
+        <div id="tilesetPresetButtons" style="display:flex;gap:6px;flex-wrap:wrap;flex:1;"></div>
+      </div>
+      <div class="tileset-row">
+        <span class="row-label">BIOMA</span>
+        <div id="biomeButtons" style="display:flex;gap:6px;flex-wrap:wrap;flex:1;">
+          <button class="tileset-btn placeholder" data-biome="cerrado">🌾 Cerrado</button>
+          <button class="tileset-btn placeholder" data-biome="caatinga">🌵 Caatinga</button>
+          <button class="tileset-btn placeholder" data-biome="floresta">🌳 Floresta</button>
+          <button class="tileset-btn placeholder" data-biome="pantanal">💧 Pantanal</button>
+        </div>
+      </div>
+      <div class="tileset-row">
+        <span class="row-label">ESTAÇÃO</span>
+        <div id="seasonButtons" style="display:flex;gap:6px;flex-wrap:wrap;flex:1;">
+          <button class="tileset-btn placeholder" data-season="seca">☀️ Seca</button>
+          <button class="tileset-btn placeholder" data-season="chuva">🌧 Chuva</button>
+          <button class="tileset-btn placeholder" data-season="outono">🍂 Outono</button>
+          <button class="tileset-btn placeholder" data-season="floracao">🌸 Floração</button>
+        </div>
+      </div>
+      <div style="font-size:12px;opacity:.5;text-align:center;">cr31 corner-bitmask: NW=1 NE=2 SE=4 SW=8</div>
+    </div>
+
+    <!-- 🌐 COMPARE ALL — overview de todos os 13 tilesets, filtrável por biome/season -->
+    <div class="tiles-main" style="border-color:#9fcfe8;background:rgba(29,58,74,0.10);">
+      <h3 style="color:#9fcfe8;">🌐 Compare All Tilesets <span id="compareAllCount" style="font-size:12px;color:#a89368;">—</span></h3>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 10px;font-size:12px;align-items:center;">
+        <span style="color:#a89368;letter-spacing:1px;">FILTER:</span>
+        <button class="cmp-filter active" data-filter-type="all" data-filter-val="all" style="padding:4px 10px;font-size:12px;background:#3a2d1e;color:#f4c95d;border:1px solid #f4c95d;border-radius:3px;cursor:pointer;">All</button>
+        <span style="opacity:.4;">|</span>
+        <span style="color:#a89368;">BIOME:</span>
+        <button class="cmp-filter" data-filter-type="biome" data-filter-val="cerrado-verde" style="padding:4px 10px;font-size:12px;background:#2a3a2a;color:#9fe89f;border:1px solid #4a3826;border-radius:3px;cursor:pointer;">🌾 verde</button>
+        <button class="cmp-filter" data-filter-type="biome" data-filter-val="cerrado-seco" style="padding:4px 10px;font-size:12px;background:#3a3a2a;color:#dfa6df;border:1px solid #4a3826;border-radius:3px;cursor:pointer;">🌵 seco</button>
+        <button class="cmp-filter" data-filter-type="biome" data-filter-val="costa" style="padding:4px 10px;font-size:12px;background:#1d3a4a;color:#9fcfe8;border:1px solid #4a3826;border-radius:3px;cursor:pointer;">🏖️ costa</button>
+        <span style="opacity:.4;">|</span>
+        <span style="color:#a89368;">SEASON:</span>
+        <button class="cmp-filter" data-filter-type="season" data-filter-val="chuva" style="padding:4px 10px;font-size:12px;background:#2a3a4a;color:#9fcfe8;border:1px solid #4a3826;border-radius:3px;cursor:pointer;">🌧 chuva</button>
+        <button class="cmp-filter" data-filter-type="season" data-filter-val="seca" style="padding:4px 10px;font-size:12px;background:#4a3a2a;color:#f4c95d;border:1px solid #4a3826;border-radius:3px;cursor:pointer;">☀️ seca</button>
+        <button class="cmp-filter" data-filter-type="season" data-filter-val="universal" style="padding:4px 10px;font-size:12px;background:#3a2a4a;color:#dfa6df;border:1px solid #4a3826;border-radius:3px;cursor:pointer;">∞ universal</button>
+      </div>
+      <div id="compareAllGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;"></div>
+    </div>
+
+    <div class="tiles-main">
+      <h3 id="tilesetTitle">cr31 Wang Tiles</h3>
+      <div class="tile-info" style="font-size:12px;opacity:.5;">Info detalhada + refs movidas pra <strong>Tab Detail</strong>.</div>
+      <div class="editor-bar" id="editorBar" hidden>
+        <button id="btnEditorToggle">✏️ Edit mode</button>
+        <button id="btnReloadTileset">↻ Reload from PixelLab</button>
+        <button id="btnShuffleTiles" style="background:#a85ba8;color:#fff;" title="Embaralha tiles (não-canônicos) pra testar auto-sort">🎲 Shuffle</button>
+        <button id="btnAutoSort" style="background:#4da9e8;color:#000;">🔍 Auto-sort visual</button>
+        <button id="btnFlipLU" style="background:#a85ba8;color:#fff;" title="Inverte lower↔upper">🔄 Flip L/U</button>
+        <button id="btnRotPlaceCW" style="background:#a89368;color:#000;" title="Rotaciona TODAS as placements CW em bitmask space (1→2→4→8→1, 5↔10, etc)">↻ Rot+ </button>
+        <button id="btnRotPlaceCCW" style="background:#a89368;color:#000;" title="Inverso: rotaciona placements CCW">↺ Rot-</button>
+        <button id="btnRestoreSnap" style="background:#a89368;color:#000;" title="Volta pro estado antes do último auto-sort" hidden>↩ Restore</button>
+        <span style="font-size:12px;opacity:.6;margin:0 4px;">|</span>
+        <label style="font-size:12px;color:#a89368;">VIEW:</label>
+        <button id="btnViewFull" class="view-mode-btn active">🔲 Full (16)</button>
+        <button id="btnViewReduced" class="view-mode-btn">🔁 Reduced via R (6)</button>
+        <span style="font-size:12px;opacity:.6;margin:0 4px;">|</span>
+        <button class="save-corrected" id="btnSaveCorrected" hidden>💾 Save corrections</button>
+        <button class="reset-corrections" id="btnResetCorrections" hidden>↺ Reset</button>
+        <span style="font-size:12px;opacity:.7;" id="editorHint"></span>
+      </div>
+      <div id="wangRefSection" hidden>
+        <div style="font-size:12px;opacity:.7;text-align:center;margin-top:10px;">📐 Reference cr31 (esperado por bitmask):</div>
+        <div class="wang-ref-grid" id="wangRefGrid"></div>
+      </div>
+      <div class="wang-grid" id="wangGrid"></div>
+    </div>
+    <!-- Test render: usa os 16 tiles pra renderizar um mapa procedural com seed -->
+    <div class="tiles-main">
+      <h3>🌍 Test render — terreno procedural</h3>
+      <div style="display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin:8px 0 14px;">
+        <label style="font-size:12px;">Seed:</label>
+        <input type="number" id="testSeed" value="42" style="width:80px;background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;font-family:monospace;">
+        <button id="btnRandomSeed" style="padding:4px 12px;font-size:12px;">🎲 Random</button>
+        <label style="font-size:12px;">Threshold:</label>
+        <input type="range" id="testThreshold" min="0" max="100" value="50" style="width:100px;">
+        <span id="testThresholdVal" style="font-size:12px;">50%</span>
+        <label style="font-size:12px;">Grid:</label>
+        <select id="testSize" style="background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;">
+          <option value="16x12">16×12 (preview)</option>
+          <option value="24x18">24×18</option>
+          <option value="32x24" selected>32×24</option>
+          <option value="48x36">48×36</option>
+          <option value="64x48">64×48</option>
+          <option value="80x60">80×60 (game scale)</option>
+        </select>
+        <button id="btnRegenTest" style="padding:4px 12px;font-size:12px;">↻ Regen</button>
+        <span id="testGridInfo" style="font-size:12px;opacity:.5;margin-left:8px;"></span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin:0 0 14px;">
+        <label style="font-size:12px;color:#a89368;">Bias:</label>
+        <select id="testBias" style="background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;font-family:monospace;font-size:12px;">
+          <option value="white">White noise (fragmentado)</option>
+          <option value="ca-3" selected>Cellular Automata · 3 iter</option>
+          <option value="ca-5">Cellular Automata · 5 iter (blobs grandes)</option>
+          <option value="ca-8">Cellular Automata · 8 iter (blobs muito grandes)</option>
+          <option value="value-2">Value noise · scale 2</option>
+          <option value="value-4">Value noise · scale 4 (organic)</option>
+          <option value="value-8">Value noise · scale 8 (continentes)</option>
+        </select>
+        <span style="font-size:12px;opacity:.5;">CA = smoothing iterations · Value = block size pra interpolar</span>
+      </div>
+      <canvas id="testCanvas" width="640" height="480" style="display:block;margin:0 auto;background:#2a2218;border:2px solid #4a3826;image-rendering:pixelated;max-width:96vw;"></canvas>
+      <div style="font-size:12px;opacity:.6;text-align:center;margin-top:6px;">ratio 4:3 (8000×6000 game map) · vertices via PRNG · cada cell = 4 cantos → tile cr31 (NW=1 NE=2 SE=4 SW=8)</div>
+    </div>
+  </div>
+</div><!-- /tab-tiles -->
+
+<script src="/config.js"></script>
+<script src="js/constants.js"></script>
+<script src="js/store.js"></script>
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/popup.js"></script>
+<script src="js/classify.js"></script>
+<script src="js/thumb.js"></script>
+<script src="js/tabs.js"></script>
+<script src="js/tab-manager.js"></script>
+<script src="js/tab-gallery.js"></script>
+<script src="js/tab-editor.js"></script>
+<script src="js/tab-detail.js"></script>
+<script src="js/tab-tiles.js"></script>
+<script src="js/balance.js"></script>
+
+</body>
+</html>

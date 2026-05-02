@@ -1,0 +1,93 @@
+/* PixaPro · editor.css — detail wrap, visualizer 8-dir, tool sections */
+.detail-wrap{display:flex;gap:14px;width:96vw;max-width:1400px;margin:20px auto;align-items:flex-start;}
+.detail-list{flex:0 0 320px;border:2px solid #4a3826;border-radius:6px;padding:8px;max-height:80vh;overflow-y:auto;background:rgba(0,0,0,0.2);}
+.detail-list h3{margin:4px 0 10px;font-size:12px;color:#f4c95d;letter-spacing:2px;text-align:center;}
+.detail-list-grid{display:grid;grid-template-columns:repeat(auto-fit,48px);gap:4px;justify-content:center;}
+.detail-list-grid .thumb{cursor:pointer;}
+.detail-list-grid .thumb.active{border-color:#f4c95d;outline:1px solid #f4c95d;}
+.detail-main{flex:1;border:2px solid #4a3826;border-radius:6px;padding:16px;background:rgba(0,0,0,0.2);}
+.detail-main h3{margin:0 0 12px;color:#f4c95d;font-size:14px;}
+.detail-main .preview{display:flex;flex-direction:column;align-items:center;gap:14px;margin-bottom:14px;}
+
+/* Visualizer grande estilo Manager stage com 8-dir slots externos */
+.visualizer{position:relative;width:480px;height:480px;margin:64px 64px 0;background:repeating-conic-gradient(#2a2218 0% 25%,#332a1f 0% 50%) 50%/40px 40px;border:2px solid #4a3826;display:flex;align-items:center;justify-content:center;flex-shrink:0;image-rendering:pixelated;}
+.visualizer .main-sprite{max-width:90%;max-height:90%;image-rendering:pixelated;}
+.visualizer .dir-overlay{position:absolute;inset:-64px;pointer-events:none;}
+.visualizer .dir-overlay .dir-slot{opacity:0;transition:opacity .15s;pointer-events:auto;}
+.visualizer:hover .dir-overlay .dir-slot{opacity:1;}
+
+/* Slots DENTRO da viewport, indentados em direção ao centro */
+.visualizer .dir-overlay{position:absolute;inset:0;pointer-events:none;}
+
+.dir-slot{position:absolute;width:48px;height:48px;background:rgba(26,20,16,0.92);border:2px solid #4a3826;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:bold;color:#a89368;cursor:pointer;border-radius:3px;}
+.dir-slot:hover{background:rgba(58,45,30,0.98);border-color:#f4c95d;color:#f4c95d;transform:scale(1.08);}
+.dir-slot img{width:44px;height:44px;image-rendering:pixelated;}
+.dir-slot.exists{border-color:#3da53d;}
+.dir-slot.missing{border-style:dashed;color:#9fcfe8;}
+.dir-slot.queued{border-color:#a85ba8;color:#fff;background:#a85ba8;}
+.dir-NW{top:32px;left:32px;}
+.dir-N{top:14px;left:50%;transform:translateX(-50%);}
+.dir-NE{top:32px;right:32px;}
+.dir-W{top:50%;left:14px;transform:translateY(-50%);}
+.dir-E{top:50%;right:14px;transform:translateY(-50%);}
+.dir-SW{bottom:32px;left:32px;}
+.dir-S{bottom:14px;left:50%;transform:translateX(-50%);}
+.dir-SE{bottom:32px;right:32px;}
+.dir-N:hover, .dir-S:hover{transform:translateX(-50%) scale(1.12);}
+.dir-W:hover, .dir-E:hover{transform:translateY(-50%) scale(1.12);}
+
+/* Name overlay no canto superior esquerdo da visualizer */
+.visualizer .name-overlay{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.78);padding:4px 10px;border-radius:3px;font-size:12px;color:#f4c95d;font-weight:bold;z-index:8;pointer-events:none;}
+
+/* Preview area abaixo da visualizer — mostra direção ao hover de slot existente */
+.dir-preview{position:relative;width:480px;height:480px;margin:14px auto 0;background:repeating-conic-gradient(#2a2218 0% 25%,#332a1f 0% 50%) 50%/40px 40px;border:2px solid #4a3826;display:none;align-items:center;justify-content:center;image-rendering:pixelated;}
+.dir-preview.show{display:flex;}
+.dir-preview img{max-width:90%;max-height:90%;image-rendering:pixelated;}
+.dir-preview .preview-label{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.78);padding:4px 10px;border-radius:3px;font-size:12px;color:#9fcfe8;font-weight:bold;}
+
+.meta{font-size:12px;line-height:1.6;text-align:center;max-width:480px;}
+.meta strong{color:#f4c95d;font-size:13px;}
+.detail-main .meta{font-size:12px;line-height:1.6;}
+
+/* Tool sections (PixelLab MCP) */
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fill, 240px);gap:10px;justify-content:start;}
+.tool-sections-row{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+.tool-section{border:2px solid #4a3826;border-radius:4px;background:rgba(0,0,0,0.2);}
+.tool-section .sec-head{margin:0;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:2px;color:#a89368;background:#2a2218;border-radius:4px 4px 0 0;user-select:none;}
+.tool-section .sec-head:hover{color:#f4c95d;background:#3a2d1e;}
+.tool-section .sec-head .toggle{font-size:13px;width:14px;display:inline-block;}
+.tool-section .sec-head .count{font-size:12px;opacity:.5;margin-left:auto;}
+.tool-section[data-collapsed="true"] .sec-body{display:none;}
+.tool-section[data-collapsed="true"] .sec-head{border-radius:4px;}
+.tool-section .sec-body{padding:10px;}
+.tool-card{border:2px solid #4a3826;border-radius:4px;padding:10px;background:rgba(0,0,0,0.3);text-align:left;}
+.tool-card.cat-create{border-color:#3da53d;background:rgba(61,165,61,0.10);}
+.tool-card.cat-modify{border-color:#3d7da5;background:rgba(61,125,165,0.10);}
+.tool-card.cat-anim{border-color:#a85ba8;background:rgba(168,91,168,0.12);}
+.tool-card.cat-meta{border-color:#a89368;background:rgba(168,147,104,0.10);}
+.tool-card.cat-delete{border-color:#a53d3d;background:rgba(165,61,61,0.10);}
+.tool-card .tname{color:#fff;}
+.tool-card.cat-create .tname{color:#9fe89f;}
+.tool-card.cat-modify .tname{color:#9fcfe8;}
+.tool-card.cat-anim .tname{color:#dfa6df;}
+.tool-card.cat-meta .tname{color:#f4c95d;}
+.tool-section[data-cat="create"]{border-color:#3da53d;}
+.tool-section[data-cat="modify"]{border-color:#3d7da5;}
+.tool-section[data-cat="anim"]{border-color:#a85ba8;}
+.tool-section[data-cat="meta"]{border-color:#a89368;}
+.tool-section[data-cat="create"] .sec-head{color:#9fe89f;}
+.tool-section[data-cat="modify"] .sec-head{color:#9fcfe8;}
+.tool-section[data-cat="anim"] .sec-head{color:#dfa6df;}
+.tool-section[data-cat="meta"] .sec-head{color:#f4c95d;}
+.tool-section{cursor:default;}
+.tool-section .sec-head{cursor:grab;}
+.tool-section.dragging{opacity:0.4;}
+.tool-section.drag-over{outline:2px dashed #f4c95d;outline-offset:-2px;}
+.tool-section .sec-head .drag-handle{cursor:grab;opacity:.5;font-size:12px;margin-right:4px;}
+.tool-section .sec-head:active{cursor:grabbing;}
+.tool-card .tname{font-size:12px;font-weight:bold;color:#f4c95d;margin-bottom:6px;font-family:monospace;}
+.tool-card label{font-size:12px;opacity:.7;display:block;margin:6px 0 2px;}
+.tool-card input, .tool-card select, .tool-card textarea{width:100%;background:#1a1410;color:#e8d9b8;border:1px solid #4a3826;padding:4px 6px;font-family:monospace;font-size:12px;box-sizing:border-box;}
+.tool-card textarea{min-height:46px;resize:vertical;}
+.tool-card .qbtn{margin-top:8px;width:100%;padding:6px;font-size:12px;font-weight:bold;background:#f4c95d;color:#000;border:1px solid #a8862e;cursor:pointer;}
+.tool-card .qbtn:hover{background:#ffd770;}

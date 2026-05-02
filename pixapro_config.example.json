@@ -1,0 +1,7 @@
+{
+  "asset_root": "H:/Projects/ChapadaEscapade/assets/pixel_labs",
+  "terrain_root": "H:/Projects/ChapadaEscapade/assets/terrain",
+  "js_scan_root": "H:/Projects/ChapadaEscapade/js",
+  "asset_url_base": "",
+  "server_url": "http://localhost:8090"
+}

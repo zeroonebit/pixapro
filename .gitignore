@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+saves/
+pixellab_secret.txt
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+node_modules/
+pixapro_config.json

@@ -1,0 +1,24 @@
+/* PixaPro · gallery.css — summary panels, filter bar, group thumbs */
+.summary{display:flex;flex-direction:column;gap:14px;width:96vw;max-width:1400px;margin:20px auto;}
+.summary-row{display:flex;gap:14px;width:100%;}
+.summary-panel{flex:1;border:2px solid;border-radius:6px;padding:14px;background:rgba(0,0,0,0.2);min-height:300px;display:flex;flex-direction:column;}
+.summary-panel.promoted{min-height:480px;}
+.summary-panel.promoted{border-color:#3da53d;}
+.summary-panel.pending{border-color:#a8862e;}
+.summary-panel.discarded{border-color:#a53d3d;}
+.summary-panel h2{margin:0 0 10px;font-size:14px;letter-spacing:2px;text-align:center;}
+.summary-panel.promoted h2{color:#9fe89f;}
+.summary-panel.pending h2{color:#f4c95d;}
+.summary-panel.discarded h2{color:#e89f9f;}
+.summary-panel .count{font-size:17px;text-align:center;font-weight:bold;margin:8px 0 12px;}
+.summary-panel .breakdown{font-size:12px;opacity:.7;margin-bottom:10px;}
+.summary-panel .grid-thumbs{display:grid;grid-template-columns:repeat(auto-fit,42px);gap:3px;overflow-y:auto;flex:1;align-content:start;justify-content:center;}
+
+.thumb-group{position:relative;}
+.thumb-group .group-badge{position:absolute;top:-4px;right:-4px;background:#f4c95d;color:#000;font-size:12px;font-weight:bold;padding:1px 4px;border-radius:6px;line-height:1;z-index:2;pointer-events:none;}
+
+/* Filter bar do PROMOTED */
+.filter-bar{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;justify-content:center;}
+.filter-bar button{padding:5px 12px;font-size:12px;background:#2a2218;color:#a89368;border:1px solid #4a3826;cursor:pointer;font-family:monospace;border-radius:3px;}
+.filter-bar button:hover{background:#3a2d1e;}
+.filter-bar button.active{background:#3a2d1e;color:#f4c95d;border-color:#f4c95d;}
