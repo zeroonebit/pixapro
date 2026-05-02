@@ -194,7 +194,26 @@
       return;
     }
     const renames = Array.from(_selected).map(idx => _scanData.suggestions[idx]).map(s => ({from: s.from, to: s.to}));
-    const ok = confirm(`Aplicar ${renames.length} renames?\n\nBackup automatico em tools/saves/asset_rename_backup_<ts>/`);
+    // Auto-check refs antes pra avisar se vai quebrar js
+    let warning = '';
+    try {
+      const r = await fetch(`${activeProjectUrl()}/check_refs`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({paths: renames.map(x => x.from)}),
+      });
+      if (r.ok) {
+        const refs = await r.json();
+        if (refs.files_count > 0) {
+          warning = `\n\n⚠ AVISO: ${refs.files_count} js files referenciam esses paths:\n` +
+                    refs.files_affected.slice(0, 5).join('\n') +
+                    (refs.files_affected.length > 5 ? `\n... +${refs.files_affected.length - 5} more` : '') +
+                    '\n\nApplicar VAI QUEBRAR esses refs ate voce updateá-los manualmente.\n' +
+                    'Recomendado: cancela aqui, atualiza os js primeiro, depois apply.';
+        }
+      }
+    } catch {}
+    const ok = confirm(`Aplicar ${renames.length} renames?${warning}\n\nBackup automatico em tools/saves/asset_rename_backup_<ts>/`);
     if (!ok) return;
     setStatus('🔄 aplicando renames...');
     try {
