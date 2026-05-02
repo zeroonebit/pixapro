@@ -1,7 +1,19 @@
 {
+  "_doc": "Config base do PixaPro. Cada PROJETO conectado tem entry em linkedProjects. Ver PROJECT_INTEGRATION.md.",
   "asset_root": "H:/Projects/ChapadaEscapade/assets/pixel_labs",
   "terrain_root": "H:/Projects/ChapadaEscapade/assets/terrain",
   "js_scan_root": "H:/Projects/ChapadaEscapade/js",
   "asset_url_base": "",
-  "server_url": "http://localhost:8090"
+  "server_url": "http://localhost:8090",
+
+  "linkedProjects": {
+    "chapada-escapade": {
+      "name": "Chapada Escapade",
+      "path": "H:/Projects/ChapadaEscapade",
+      "server_url": "http://localhost:8090",
+      "maps_endpoint": "/maps",
+      "asset_root": "H:/Projects/ChapadaEscapade/assets/pixel_labs",
+      "terrain_root": "H:/Projects/ChapadaEscapade/assets/terrain"
+    }
+  }
 }
