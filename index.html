@@ -29,6 +29,7 @@
   <button class="tab active" data-tab="manager">🔍 Audit</button>
   <button class="tab" data-tab="detail">🔧 Detail (queue)</button>
   <button class="tab" data-tab="tiles">🧩 Tiles</button>
+  <button class="tab" data-tab="map">🗺️ Map</button>
 </div>
 
 <!-- ====== TAB EDITOR (approved top · visualizer center · tools bottom) ====== -->
@@ -283,46 +284,79 @@
       </div>
       <div class="wang-grid" id="wangGrid"></div>
     </div>
-    <!-- Test render: usa os 16 tiles pra renderizar um mapa procedural com seed -->
-    <div class="tiles-main">
-      <h3>🌍 Test render — terreno procedural</h3>
-      <div style="display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin:8px 0 14px;">
-        <label style="font-size:12px;">Seed:</label>
-        <input type="number" id="testSeed" value="42" style="width:80px;background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;font-family:monospace;">
-        <button id="btnRandomSeed" style="padding:4px 12px;font-size:12px;">🎲 Random</button>
-        <label style="font-size:12px;">Threshold:</label>
-        <input type="range" id="testThreshold" min="0" max="100" value="50" style="width:100px;">
-        <span id="testThresholdVal" style="font-size:12px;">50%</span>
-        <label style="font-size:12px;">Grid:</label>
-        <select id="testSize" style="background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;">
-          <option value="16x12">16×12 (preview)</option>
-          <option value="24x18">24×18</option>
-          <option value="32x24" selected>32×24</option>
-          <option value="48x36">48×36</option>
-          <option value="64x48">64×48</option>
-          <option value="80x60">80×60 (game scale)</option>
-        </select>
-        <button id="btnRegenTest" style="padding:4px 12px;font-size:12px;">↻ Regen</button>
-        <span id="testGridInfo" style="font-size:12px;opacity:.5;margin-left:8px;"></span>
-      </div>
-      <div style="display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin:0 0 14px;">
-        <label style="font-size:12px;color:#a89368;">Bias:</label>
-        <select id="testBias" style="background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;font-family:monospace;font-size:12px;">
-          <option value="white">White noise (fragmentado)</option>
-          <option value="ca-3" selected>Cellular Automata · 3 iter</option>
-          <option value="ca-5">Cellular Automata · 5 iter (blobs grandes)</option>
-          <option value="ca-8">Cellular Automata · 8 iter (blobs muito grandes)</option>
-          <option value="value-2">Value noise · scale 2</option>
-          <option value="value-4">Value noise · scale 4 (organic)</option>
-          <option value="value-8">Value noise · scale 8 (continentes)</option>
-        </select>
-        <span style="font-size:12px;opacity:.5;">CA = smoothing iterations · Value = block size pra interpolar</span>
-      </div>
-      <canvas id="testCanvas" width="640" height="480" style="display:block;margin:0 auto;background:#2a2218;border:2px solid #4a3826;image-rendering:pixelated;max-width:96vw;"></canvas>
-      <div style="font-size:12px;opacity:.6;text-align:center;margin-top:6px;">ratio 4:3 (8000×6000 game map) · vertices via PRNG · cada cell = 4 cantos → tile cr31 (NW=1 NE=2 SE=4 SW=8)</div>
-    </div>
   </div>
 </div><!-- /tab-tiles -->
+
+<!-- ====== TAB MAP (test render terreno procedural + save as preset por projeto) ====== -->
+<div class="tab-content" id="tab-map" hidden>
+  <div style="padding:14px;max-width:1280px;margin:0 auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+      <h3 style="margin:0;">🗺️ Map presets — terreno procedural por projeto</h3>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <label style="font-size:12px;color:#a89368;">Project:</label>
+        <select id="mapProjectSel" style="background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;font-family:monospace;font-size:12px;">
+          <option value="chapada-escapade">chapada-escapade</option>
+        </select>
+        <button id="btnRefreshProjectMaps" style="padding:4px 10px;font-size:12px;">↻</button>
+      </div>
+    </div>
+
+    <!-- LEFT: controles + canvas | RIGHT: lista de presets salvos -->
+    <div style="display:grid;grid-template-columns:1fr 280px;gap:16px;">
+      <div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 10px;">
+          <label style="font-size:12px;">Seed:</label>
+          <input type="number" id="testSeed" value="42" style="width:80px;background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;font-family:monospace;">
+          <button id="btnRandomSeed" style="padding:4px 12px;font-size:12px;">🎲 Random</button>
+          <label style="font-size:12px;">Threshold:</label>
+          <input type="range" id="testThreshold" min="0" max="100" value="50" style="width:100px;">
+          <span id="testThresholdVal" style="font-size:12px;">50%</span>
+          <label style="font-size:12px;">Grid:</label>
+          <select id="testSize" style="background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;">
+            <option value="16x12">16×12</option>
+            <option value="24x18">24×18</option>
+            <option value="32x24" selected>32×24</option>
+            <option value="48x36">48×36</option>
+            <option value="64x48">64×48</option>
+            <option value="80x60">80×60</option>
+            <option value="100x75">100×75 (game scale)</option>
+          </select>
+          <button id="btnRegenTest" style="padding:4px 12px;font-size:12px;">↻ Regen</button>
+          <span id="testGridInfo" style="font-size:12px;opacity:.5;"></span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 12px;">
+          <label style="font-size:12px;color:#a89368;">Bias:</label>
+          <select id="testBias" style="background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;font-family:monospace;font-size:12px;">
+            <option value="white">White noise (fragmentado)</option>
+            <option value="ca-3" selected>Cellular Automata · 3 iter</option>
+            <option value="ca-5">CA · 5 iter (blobs grandes)</option>
+            <option value="ca-8">CA · 8 iter (gigantes)</option>
+            <option value="value-2">Value noise · 2</option>
+            <option value="value-4">Value noise · 4 (organic)</option>
+            <option value="value-8">Value noise · 8 (continentes)</option>
+          </select>
+          <span style="font-size:11px;opacity:.5;">CA = smoothing · Value = block size</span>
+        </div>
+        <canvas id="testCanvas" width="640" height="480" style="display:block;margin:0 auto;background:#2a2218;border:2px solid #4a3826;image-rendering:pixelated;max-width:100%;"></canvas>
+        <div style="font-size:11px;opacity:.6;text-align:center;margin-top:6px;">cada cell = 4 cantos → tile cr31 (NW=1 NE=2 SE=4 SW=8)</div>
+      </div>
+
+      <!-- RIGHT: presets salvos -->
+      <div style="background:#1a1408;border:1px solid #4a3826;padding:10px;border-radius:4px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <h4 style="margin:0;font-size:13px;color:#f4c95d;">💾 Presets salvos</h4>
+          <span id="mapPresetsCount" style="font-size:11px;opacity:.5;">0</span>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:8px;">
+          <input type="text" id="mapNewName" placeholder="nome_do_preset" style="flex:1;background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;font-family:monospace;font-size:11px;">
+          <button id="btnSaveMapPreset" style="padding:4px 10px;font-size:11px;background:#4a8a44;color:#fff;">💾 Save</button>
+        </div>
+        <div id="mapPresetsList" style="max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;"></div>
+        <div id="mapPresetStatus" style="font-size:10px;opacity:.6;margin-top:8px;text-align:center;"></div>
+      </div>
+    </div>
+  </div>
+</div><!-- /tab-map -->
 
 <script src="/config.js"></script>
 <script src="js/constants.js"></script>
@@ -338,6 +372,7 @@
 <script src="js/tab-editor.js"></script>
 <script src="js/tab-detail.js"></script>
 <script src="js/tab-tiles.js"></script>
+<script src="js/tab-map.js"></script>
 <script src="js/balance.js"></script>
 
 </body>
