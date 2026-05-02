@@ -280,10 +280,31 @@
       }
       return [fp.join('/'), tp.join('/')];
     }
-    const prefixMap = {};
+    // Conta quantos renames compartilham cada (from_prefix, to_prefix).
+    // Prefix rule SAFE = grupo com >=2 renames OU from_prefix com >=4 segments
+    // (ex: 'assets/pixel_labs/chars/nature' tem 4 segs, 'assets/pixel_labs' tem 2).
+    // Singletons short-prefix viram literal full-path replace pra evitar
+    // engolir paths irmaos nao-renomeados (ex: pixel_labs/beam.png -> fx/beam.png
+    // NAO deve mexer em pixel_labs/chars/cow/...).
+    const groupCounts = {};
     for (const r of renames) {
       const [fp, tp] = diffPrefix(r.from, r.to);
-      if (fp) prefixMap[fp] = tp;
+      if (!fp) continue;
+      const key = fp + ' ' + tp;
+      groupCounts[key] = (groupCounts[key] || 0) + 1;
+    }
+    const prefixMap = {};
+    const literalRenames = []; // singletons unsafe pra prefix
+    for (const r of renames) {
+      const [fp, tp] = diffPrefix(r.from, r.to);
+      if (!fp) continue;
+      const key = fp + ' ' + tp;
+      const segs = fp.split('/').length;
+      if (groupCounts[key] >= 2 || segs >= 4) {
+        prefixMap[fp] = tp;
+      } else {
+        literalRenames.push({from: r.from, to: r.to});
+      }
     }
     // Fetch js files, calcula updates
     setStatus(`🔄 fetching js files do GitHub...`);
@@ -304,6 +325,15 @@
       const original = await fR.text();
       let updated = original;
       const replaces = [];
+      // 1: literal full-path renames (singletons)
+      for (const lit of literalRenames) {
+        const count = updated.split(lit.from).length - 1;
+        if (count > 0) {
+          updated = updated.split(lit.from).join(lit.to);
+          replaces.push({old: lit.from, new: lit.to, count});
+        }
+      }
+      // 2: prefix rules (directory moves, safe)
       for (const [fp, tp] of Object.entries(prefixMap)) {
         const oldTok = fp + '/';
         const newTok = tp ? tp + '/' : '';
