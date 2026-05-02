@@ -30,6 +30,7 @@
   <button class="tab" data-tab="detail">🔧 Detail (queue)</button>
   <button class="tab" data-tab="tiles">🧩 Tiles</button>
   <button class="tab" data-tab="map">🗺️ Map</button>
+  <button class="tab" data-tab="naming">📋 Naming</button>
 </div>
 
 <!-- ====== TAB EDITOR (approved top · visualizer center · tools bottom) ====== -->
@@ -358,6 +359,74 @@
   </div>
 </div><!-- /tab-map -->
 
+<!-- ====== TAB NAMING (Asset naming convention audit + apply renames) ====== -->
+<div class="tab-content" id="tab-naming" hidden>
+  <div style="padding:14px;max-width:1400px;margin:0 auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+      <div>
+        <h3 style="margin:0;">📋 Asset naming audit</h3>
+        <div style="font-size:11px;opacity:.6;margin-top:4px;">
+          Spec: <a href="/ASSET_NAMING_STANDARD.md" target="_blank" style="color:#f4c95d;">ASSET_NAMING_STANDARD.md</a>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <label style="font-size:12px;color:#a89368;">Project:</label>
+        <select id="namingProjectSel" style="background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;font-family:monospace;font-size:12px;">
+          <option value="chapada-escapade">chapada-escapade</option>
+        </select>
+        <button id="btnNamingScan" style="padding:4px 10px;font-size:12px;background:#3a4a8a;color:#fff;">↻ Scan</button>
+      </div>
+    </div>
+
+    <!-- Stats summary -->
+    <div id="namingStats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px;">
+      <div class="stat-card" style="background:#1a1408;border:1px solid #4a3826;padding:10px;border-radius:4px;text-align:center;">
+        <div style="font-size:24px;color:#f4c95d;font-weight:bold;" id="statTotal">—</div>
+        <div style="font-size:10px;opacity:.6;">total assets</div>
+      </div>
+      <div class="stat-card" style="background:#1a2a18;border:1px solid #4a8a44;padding:10px;border-radius:4px;text-align:center;">
+        <div style="font-size:24px;color:#88cc66;font-weight:bold;" id="statClassified">—</div>
+        <div style="font-size:10px;opacity:.6;">classified ✓</div>
+      </div>
+      <div class="stat-card" style="background:#2a2018;border:1px solid #aa6644;padding:10px;border-radius:4px;text-align:center;">
+        <div style="font-size:24px;color:#cc8866;font-weight:bold;" id="statUnclassified">—</div>
+        <div style="font-size:10px;opacity:.6;">unclassified ⚠</div>
+      </div>
+      <div class="stat-card" style="background:#1a2236;border:1px solid #4466aa;padding:10px;border-radius:4px;text-align:center;">
+        <div style="font-size:24px;color:#88aacc;font-weight:bold;" id="statSuggestions">—</div>
+        <div style="font-size:10px;opacity:.6;">renames sugeridos</div>
+      </div>
+    </div>
+
+    <!-- By category breakdown -->
+    <div style="background:#1a1408;border:1px solid #4a3826;padding:10px;border-radius:4px;margin-bottom:14px;">
+      <h4 style="margin:0 0 8px;font-size:13px;color:#f4c95d;">📊 By category</h4>
+      <div id="namingByCategory" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;font-size:11px;"></div>
+    </div>
+
+    <!-- Suggestions: rename batch -->
+    <div style="background:#1a1408;border:1px solid #4a3826;padding:10px;border-radius:4px;margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+        <h4 style="margin:0;font-size:13px;color:#f4c95d;">🔄 Rename suggestions</h4>
+        <div style="display:flex;gap:6px;align-items:center;font-size:11px;">
+          <span id="namingSelectedCount" style="opacity:.6;">0 selecionados</span>
+          <button id="btnNamingSelectAll" style="padding:3px 8px;font-size:11px;">Select all</button>
+          <button id="btnNamingDeselectAll" style="padding:3px 8px;font-size:11px;">Deselect</button>
+          <button id="btnNamingApply" style="padding:4px 12px;font-size:11px;background:#aa4a44;color:#fff;font-weight:bold;">⚠ Apply selected</button>
+        </div>
+      </div>
+      <div id="namingStatus" style="font-size:11px;opacity:.7;margin-bottom:8px;"></div>
+      <div id="namingSuggestionsList" style="max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:3px;font-size:11px;font-family:monospace;"></div>
+    </div>
+
+    <!-- Unclassified items: lista pra revisao manual -->
+    <div style="background:#1a1408;border:1px solid #4a3826;padding:10px;border-radius:4px;">
+      <h4 style="margin:0 0 8px;font-size:13px;color:#cc8866;">⚠ Unclassified (revisar manual)</h4>
+      <div id="namingUnclassifiedList" style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;font-size:11px;font-family:monospace;opacity:.85;"></div>
+    </div>
+  </div>
+</div><!-- /tab-naming -->
+
 <script src="/config.js"></script>
 <script src="js/constants.js"></script>
 <script src="js/store.js"></script>
@@ -373,6 +442,7 @@
 <script src="js/tab-detail.js"></script>
 <script src="js/tab-tiles.js"></script>
 <script src="js/tab-map.js"></script>
+<script src="js/tab-naming.js"></script>
 <script src="js/balance.js"></script>
 
 </body>
