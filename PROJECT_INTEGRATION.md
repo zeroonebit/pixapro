@@ -182,13 +182,79 @@ async function loadMapPreset(name) {
 
 ## Workflow típico
 
-1. Dev abre PixaPro (`http://localhost:8090/PixaPro/index.html`)
+1. Dev abre PixaPro (`http://localhost:8089/`)
 2. Seleciona projeto-alvo no header (futuro: dropdown)
-3. Vai pra aba **Map** (futuro)
+3. Vai pra aba **🗺️ Map**
 4. Ajusta seed/threshold/bias/tileStyle, vê o preview no canvas
-5. Clica **Save as preset...** → escolhe nome → POST `/maps/<name>` no server do projeto
+5. Clica **💾 Save as preset...** → escolhe nome → POST `/maps/<name>` no project server
 6. No game, abre CONFIGS → MAP → clica "↻ Refresh from PixaPro"
 7. Seleciona o preset no dropdown → game re-renderiza com aquele config
+
+---
+
+## Modo Pages-only (sem servers locais)
+
+PixaPro pode rodar **só com GitHub Pages**, sem precisar de servers locais. Funciona pra **read-only** (browse, audit, load preset). Write (Save, Apply renames) ainda precisa do project server local.
+
+### Setup
+
+Cada projeto deve:
+
+1. Ter `tools/bake_indexes.py` (script que walka assets/ e maps/ pra gerar JSONs estáticos)
+2. Commitar `data/maps/<name>.json` (presets viram arquivos estáticos)
+3. Workflow GitHub Actions auto-roda `bake_indexes.py` em pushes pra main que tocam `assets/`, `data/maps/`, ou o script — atualiza `data/_assets_index.json` + `data/maps/_index.json` e commita de volta
+4. Habilitar GitHub Pages servindo da root da branch main
+
+### Fluxo de fetch fallback
+
+PixaPro tab-map e tab-naming usam `fetchWithFallback(serverPath, pagesPath)`:
+
+```js
+const PROJECTS = {
+  'chapada-escapade': {
+    server: 'http://localhost:8090',                          // local · read+write
+    pages:  'https://zeroonebit.github.io/chapada-escapade',  // Pages · read-only
+  },
+};
+
+async function fetchWithFallback(serverPath, pagesPath) {
+  // Tenta server local primeiro (timeout 2s)
+  try {
+    const r = await fetch(cfg.server + serverPath, {signal: AbortSignal.timeout(2000)});
+    if (r.ok) return {data: await r.json(), source: 'server'};
+  } catch {}
+  // Fallback Pages
+  try {
+    const r = await fetch(cfg.pages + pagesPath);
+    if (r.ok) return {data: await r.json(), source: 'pages'};
+  } catch {}
+  return null;
+}
+```
+
+UI mostra qual fonte tá ativa (`local · read+write` vs `Pages · read-only`) e desabilita botões de write quando estiver no modo Pages.
+
+### Mapeamento server → Pages
+
+| Endpoint local (project_server) | Equivalente estático no Pages |
+|---|---|
+| `GET /maps?project=<slug>` | `GET /data/maps/_index.json` |
+| `GET /maps/<name>?project=<slug>` | `GET /data/maps/<name>.json` |
+| `GET /scan_assets` | `GET /data/_assets_index.json` |
+| `POST /maps/<name>` | ❌ requer server local |
+| `POST /apply_renames` | ❌ requer server local |
+| `POST /check_refs` | ❌ requer server local |
+
+### Para writes em modo "near-Pages"
+
+Quando salvar um preset no PixaPro com server local rodando:
+1. POST salva em `tools/saves/projects/<slug>/maps/<name>.json` (privado do dev)
+2. Dev copia pra `data/maps/<name>.json` (commitado)
+3. Roda `python tools/bake_indexes.py` (atualiza `_index.json`)
+4. `git add data/ && git commit && git push`
+5. GitHub Action confirma o bake e Pages atualiza em ~30s
+
+Workflow possivelmente futuro: Save direto pelo PixaPro via **GitHub API** (PUT /repos/{owner}/{repo}/contents/{path}) usando PAT/OAuth. Elimina servers locais por completo.
 
 ---
 

@@ -13,18 +13,39 @@
 
 (function(){
 
-  // PROJECT URL: por enquanto chapada-escapade fixo.
-  // TODO: ler de /config.js (servido pelo server.py) ou do pixapro_config.json
+  // PROJECT URLs: cada projeto tem 2 endpoints possiveis:
+  //   - server: project_server.py local (read+write)
+  //   - pages:  GitHub Pages do projeto (read-only via _index.json)
+  // Usa server primeiro; se falhar (offline), fallback pra pages.
   const PROJECTS = {
-    'chapada-escapade': 'http://localhost:8090',
+    'chapada-escapade': {
+      server: 'http://localhost:8090',
+      pages:  'https://zeroonebit.github.io/chapada-escapade',
+    },
   };
 
   function activeProject() {
     const sel = document.getElementById('mapProjectSel');
     return sel ? sel.value : 'chapada-escapade';
   }
-  function activeProjectUrl() {
-    return PROJECTS[activeProject()] || 'http://localhost:8090';
+  function activeProjectCfg() {
+    return PROJECTS[activeProject()] || PROJECTS['chapada-escapade'];
+  }
+  // Fetch tenta server local primeiro (suporta write). Se 4xx/5xx/network
+  // error, fallback pra Pages (read-only). Retorna {data, source}.
+  async function fetchWithFallback(serverPath, pagesPath) {
+    const cfg = activeProjectCfg();
+    try {
+      const r = await fetch(cfg.server + serverPath, {signal: AbortSignal.timeout(2000)});
+      if (r.ok) return {data: await r.json(), source: 'server'};
+    } catch {}
+    if (pagesPath) {
+      try {
+        const r = await fetch(cfg.pages + pagesPath);
+        if (r.ok) return {data: await r.json(), source: 'pages'};
+      } catch {}
+    }
+    return null;
   }
 
   function setStatus(msg, ok=true) {
@@ -37,14 +58,22 @@
 
   async function refreshMapList() {
     const proj = activeProject();
-    const url = `${activeProjectUrl()}/maps?project=${proj}`;
     const list = document.getElementById('mapPresetsList');
     const count = document.getElementById('mapPresetsCount');
     if (!list) return;
+    // Tenta server local (full CRUD), fallback pages (_index.json baked)
+    const result = await fetchWithFallback(
+      `/maps?project=${proj}`,
+      `/data/maps/_index.json`
+    );
+    if (!result) {
+      list.innerHTML = '';
+      if (count) count.textContent = '0';
+      setStatus(`✗ ambos offline -- nem server (8090) nem Pages respondem`, false);
+      return;
+    }
     try {
-      const r = await fetch(url);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const data = await r.json();
+      const data = result.data;
       const maps = data.maps || [];
       if (count) count.textContent = `${maps.length}`;
       if (maps.length === 0) {
@@ -63,20 +92,32 @@
           b.addEventListener('click', () => loadPreset(b.dataset.name));
         });
       }
-      setStatus(`✓ ${maps.length} presets · ${proj}`);
+      const srcLabel = result.source === 'server' ? '(local · read+write)' : '(Pages · read-only)';
+      setStatus(`✓ ${maps.length} presets · ${proj} · ${srcLabel}`);
+      // Disable save UI se for read-only
+      const saveBtn = document.getElementById('btnSaveMapPreset');
+      if (saveBtn) {
+        saveBtn.disabled = (result.source === 'pages');
+        saveBtn.title = result.source === 'pages' ? 'Save requer project_server.py local rodando' : '';
+      }
     } catch (e) {
       list.innerHTML = '';
       if (count) count.textContent = '0';
-      setStatus(`✗ server offline: ${e.message}`, false);
+      setStatus(`✗ erro: ${e.message}`, false);
     }
   }
 
   async function loadPreset(name) {
-    const url = `${activeProjectUrl()}/maps/${encodeURIComponent(name)}?project=${activeProject()}`;
+    const result = await fetchWithFallback(
+      `/maps/${encodeURIComponent(name)}?project=${activeProject()}`,
+      `/data/maps/${encodeURIComponent(name)}.json`
+    );
+    if (!result) {
+      setStatus(`✗ load fail: ambos offline`, false);
+      return;
+    }
     try {
-      const r = await fetch(url);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const m = await r.json();
+      const m = result.data;
       // Aplica nos controles + re-renderiza
       const $ = (id) => document.getElementById(id);
       if (m.seed != null && $('testSeed')) $('testSeed').value = m.seed;
@@ -130,7 +171,8 @@
       // tileStyle: opcional -- se vazio, game usa seu proprio fx.tileStyle
       tileStyle: '',
     };
-    const url = `${activeProjectUrl()}/maps/${encodeURIComponent(name)}?project=${activeProject()}`;
+    // Save EXIGE local server (Pages e read-only)
+    const url = `${activeProjectCfg().server}/maps/${encodeURIComponent(name)}?project=${activeProject()}`;
     try {
       const r = await fetch(url, {
         method: 'POST',
@@ -139,10 +181,10 @@
       });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const data = await r.json();
-      setStatus(`✓ saved "${name}" -> ${data.path}`);
+      setStatus(`✓ saved "${name}" -> ${data.path} · roda \`python tools/bake_indexes.py\` + commit pra Pages servir`);
       refreshMapList();
     } catch (e) {
-      setStatus(`✗ save fail: ${e.message}`, false);
+      setStatus(`✗ save fail: ${e.message} -- precisa project_server.py rodando local`, false);
     }
   }
 

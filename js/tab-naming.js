@@ -8,18 +8,36 @@
 (function(){
 
   const PROJECTS = {
-    'chapada-escapade': 'http://localhost:8090',
+    'chapada-escapade': {
+      server: 'http://localhost:8090',
+      pages:  'https://zeroonebit.github.io/chapada-escapade',
+    },
   };
 
   let _scanData = null;       // ultimo scan completo (cache em memoria)
   let _selected = new Set();  // suggestions selecionadas pra apply
+  let _readOnly = false;      // true se source = Pages (sem write)
 
   function activeProject() {
     const sel = document.getElementById('namingProjectSel');
     return sel ? sel.value : 'chapada-escapade';
   }
-  function activeProjectUrl() {
-    return PROJECTS[activeProject()] || 'http://localhost:8090';
+  function activeProjectCfg() {
+    return PROJECTS[activeProject()] || PROJECTS['chapada-escapade'];
+  }
+  async function fetchWithFallback(serverPath, pagesPath) {
+    const cfg = activeProjectCfg();
+    try {
+      const r = await fetch(cfg.server + serverPath, {signal: AbortSignal.timeout(2000)});
+      if (r.ok) return {data: await r.json(), source: 'server'};
+    } catch {}
+    if (pagesPath) {
+      try {
+        const r = await fetch(cfg.pages + pagesPath);
+        if (r.ok) return {data: await r.json(), source: 'pages'};
+      } catch {}
+    }
+    return null;
   }
   function $(id) { return document.getElementById(id); }
   function escHtml(s) {
@@ -35,18 +53,25 @@
 
   async function runScan() {
     setStatus('🔄 scanning...');
-    try {
-      const r = await fetch(`${activeProjectUrl()}/scan_assets`);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      _scanData = await r.json();
-      _selected.clear();
-      renderStats();
-      renderByCategory();
-      renderSuggestions();
-      renderUnclassified();
-      setStatus(`✓ scan completo: ${_scanData.total} assets, ${_scanData.suggestions.length} renames sugeridos`);
-    } catch (e) {
-      setStatus(`✗ scan falhou: ${e.message} -- rode \`python tools/project_server.py\``, false);
+    const result = await fetchWithFallback('/scan_assets', '/data/_assets_index.json');
+    if (!result) {
+      setStatus(`✗ scan falhou: nem server (8090) nem Pages respondem`, false);
+      return;
+    }
+    _scanData = result.data;
+    _readOnly = (result.source === 'pages');
+    _selected.clear();
+    renderStats();
+    renderByCategory();
+    renderSuggestions();
+    renderUnclassified();
+    const srcLabel = result.source === 'server' ? '(local · read+write)' : '(Pages · read-only)';
+    setStatus(`✓ scan completo: ${_scanData.total} assets, ${_scanData.suggestions.length} renames sugeridos · ${srcLabel}`);
+    // Disable Apply button se for read-only
+    const applyBtn = document.getElementById('btnNamingApply');
+    if (applyBtn) {
+      applyBtn.disabled = _readOnly;
+      applyBtn.title = _readOnly ? 'Apply requer project_server.py local rodando' : '';
     }
   }
 
@@ -127,10 +152,14 @@
       setStatus('Marca pelo menos um rename pra checar refs.', false);
       return;
     }
+    if (_readOnly) {
+      setStatus('Check refs requer project_server.py local rodando.', false);
+      return;
+    }
     const paths = Array.from(_selected).map(idx => _scanData.suggestions[idx].from);
     setStatus(`🔄 checando refs em ${paths.length} paths...`);
     try {
-      const r = await fetch(`${activeProjectUrl()}/check_refs`, {
+      const r = await fetch(`${activeProjectCfg().server}/check_refs`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({paths}),
@@ -197,7 +226,7 @@
     // Auto-check refs antes pra avisar se vai quebrar js
     let warning = '';
     try {
-      const r = await fetch(`${activeProjectUrl()}/check_refs`, {
+      const r = await fetch(`${activeProjectCfg().server}/check_refs`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({paths: renames.map(x => x.from)}),
@@ -217,7 +246,7 @@
     if (!ok) return;
     setStatus('🔄 aplicando renames...');
     try {
-      const r = await fetch(`${activeProjectUrl()}/apply_renames`, {
+      const r = await fetch(`${activeProjectCfg().server}/apply_renames`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(renames),
