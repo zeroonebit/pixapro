@@ -60,6 +60,7 @@
   <button class="tab" data-tab="tiles">🧩 Tiles</button>
   <button class="tab" data-tab="map">🗺️ Map</button>
   <button class="tab" data-tab="naming">📋 Naming</button>
+  <button class="tab" data-tab="browse">🔍 Browse</button>
 </div>
 
 <!-- ====== TAB EDITOR (approved top · visualizer center · tools bottom) ====== -->
@@ -387,6 +388,61 @@
   </div>
 </div><!-- /tab-map -->
 
+<!-- ====== TAB BROWSE (asset gallery com filtros) ====== -->
+<div class="tab-content" id="tab-browse" hidden>
+  <div style="padding:14px;max-width:1400px;margin:0 auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+      <div>
+        <h3 style="margin:0;">🔍 Browse all assets</h3>
+        <div style="font-size:11px;opacity:.6;margin-top:2px;" id="browseStats">—</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <label style="font-size:12px;color:#a89368;">Project:</label>
+        <select id="browseProjectSel" data-pixa-projects style="background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;font-family:monospace;font-size:12px;"></select>
+        <button id="browseRefresh" style="padding:4px 10px;font-size:12px;">↻</button>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div style="background:#1a1408;border:1px solid #4a3826;padding:10px;border-radius:4px;margin-bottom:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;font-size:11px;">
+      <label>
+        <span style="color:#f4c95d;display:block;margin-bottom:4px;">Category</span>
+        <select id="browseFilterCat" style="width:100%;background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 6px;font-family:monospace;">
+          <option value="">All categories</option>
+        </select>
+      </label>
+      <label>
+        <span style="color:#f4c95d;display:block;margin-bottom:4px;">In-game</span>
+        <select id="browseFilterInGame" style="width:100%;background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 6px;font-family:monospace;">
+          <option value="">All</option>
+          <option value="true">🟢 In-game (wired)</option>
+          <option value="false">🟡 Órfãos</option>
+        </select>
+      </label>
+      <label>
+        <span style="color:#f4c95d;display:block;margin-bottom:4px;">Search (path/name/tag)</span>
+        <input type="text" id="browseSearch" placeholder="ex: cow, fence_v2, ufo, wang_05..." style="width:100%;background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;font-family:monospace;font-size:11px;">
+      </label>
+      <label>
+        <span style="color:#f4c95d;display:block;margin-bottom:4px;">View</span>
+        <select id="browseView" style="width:100%;background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 6px;font-family:monospace;">
+          <option value="grid">Grid (thumbs)</option>
+          <option value="list">List (paths)</option>
+        </select>
+      </label>
+    </div>
+
+    <!-- Stats da query -->
+    <div id="browseQueryStats" style="font-size:11px;opacity:.6;margin-bottom:8px;">—</div>
+
+    <!-- Grid/list de assets -->
+    <div id="browseGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px;"></div>
+
+    <!-- Detail panel (preenche quando clica num thumb) -->
+    <div id="browseDetail" style="display:none;background:#1a1408;border:2px solid #6b5234;border-radius:4px;padding:14px;margin-top:14px;font-size:11px;"></div>
+  </div>
+</div><!-- /tab-browse -->
+
 <!-- ====== TAB NAMING (Asset naming convention audit + apply renames) ====== -->
 <div class="tab-content" id="tab-naming" hidden>
   <div style="padding:14px;max-width:1400px;margin:0 auto;">
@@ -500,6 +556,7 @@
 <script src="js/projects.js"></script>
 <script src="js/tab-map.js"></script>
 <script src="js/tab-naming.js"></script>
+<script src="js/tab-browse.js"></script>
 <script src="js/balance.js"></script>
 
 </body>
