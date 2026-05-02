@@ -59,6 +59,8 @@
     $('statClassified').textContent = _scanData.classified;
     $('statUnclassified').textContent = _scanData.unclassified;
     $('statSuggestions').textContent = _scanData.suggestions.length;
+    if ($('statInGame'))  $('statInGame').textContent  = _scanData.in_game ?? '—';
+    if ($('statOrphan'))  $('statOrphan').textContent  = _scanData.orphan ?? '—';
   }
 
   function renderByCategory() {
@@ -76,24 +78,39 @@
     }).join('');
   }
 
+  function getFilter() {
+    const checked = document.querySelector('input[name="namingFilter"]:checked');
+    return checked ? checked.value : 'all';
+  }
+
   function renderSuggestions() {
     if (!_scanData) return;
     const list = $('namingSuggestionsList');
     if (!list) return;
-    const sugs = _scanData.suggestions || [];
+    const allSugs = _scanData.suggestions || [];
+    const filter = getFilter();
+    const sugs = allSugs
+      .map((s, idx) => ({...s, _idx: idx}))
+      .filter(s => filter === 'all' || (filter === 'in-game' && s.inGame) || (filter === 'orphan' && !s.inGame));
     if (sugs.length === 0) {
-      list.innerHTML = '<div style="opacity:.5;text-align:center;padding:20px;">Nenhuma sugestao -- todos os assets ja seguem o standard ✓</div>';
+      list.innerHTML = `<div style="opacity:.5;text-align:center;padding:20px;">Nenhuma sugestão${filter !== 'all' ? ` no filtro "${filter}"` : ''} ✓</div>`;
       return;
     }
-    list.innerHTML = sugs.map((s, idx) => `
+    list.innerHTML = sugs.map(s => {
+      const igBadge = s.inGame
+        ? `<span style="background:#1a3a1a;color:#88cc66;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:bold;">IN-GAME</span>`
+        : `<span style="background:#3a2818;color:#cc9966;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:bold;">ÓRFÃO</span>`;
+      return `
       <label style="display:flex;align-items:center;gap:6px;background:#2a2218;border:1px solid #4a3826;padding:5px 8px;border-radius:3px;cursor:pointer;">
-        <input type="checkbox" class="sugg-chk" data-idx="${idx}" />
+        <input type="checkbox" class="sugg-chk" data-idx="${s._idx}" />
+        ${igBadge}
         <span style="flex:1;color:#cc8866;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(s.from)}</span>
         <span style="opacity:.4;">→</span>
         <span style="flex:1;color:#88cc66;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(s.to)}</span>
         <span style="opacity:.5;font-size:10px;">${(s.confidence * 100).toFixed(0)}%</span>
       </label>
-    `).join('');
+      `;
+    }).join('');
     list.querySelectorAll('.sugg-chk').forEach(chk => {
       chk.addEventListener('change', () => {
         const idx = parseInt(chk.dataset.idx);
@@ -272,6 +289,10 @@
     });
     // Re-scan quando user troca de projeto via dropdown
     document.addEventListener('pixapro:project-changed', runScan);
+    // Filter radio: re-renderiza só as suggestions
+    document.querySelectorAll('input[name="namingFilter"]').forEach(r => {
+      r.addEventListener('change', renderSuggestions);
+    });
   });
 
 })();

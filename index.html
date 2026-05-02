@@ -394,12 +394,28 @@
         <div style="font-size:24px;color:#88aacc;font-weight:bold;" id="statSuggestions">—</div>
         <div style="font-size:10px;opacity:.6;">renames sugeridos</div>
       </div>
+      <div class="stat-card" style="background:#1a2618;border:1px solid #4a8a44;padding:10px;border-radius:4px;text-align:center;">
+        <div style="font-size:24px;color:#88cc66;font-weight:bold;" id="statInGame">—</div>
+        <div style="font-size:10px;opacity:.6;">in-game ✓ (wired no js)</div>
+      </div>
+      <div class="stat-card" style="background:#26201a;border:1px solid #aa7744;padding:10px;border-radius:4px;text-align:center;">
+        <div style="font-size:24px;color:#cc9966;font-weight:bold;" id="statOrphan">—</div>
+        <div style="font-size:10px;opacity:.6;">órfãos (não wired)</div>
+      </div>
     </div>
 
     <!-- By category breakdown -->
     <div style="background:#1a1408;border:1px solid #4a3826;padding:10px;border-radius:4px;margin-bottom:14px;">
       <h4 style="margin:0 0 8px;font-size:13px;color:#f4c95d;">📊 By category</h4>
       <div id="namingByCategory" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;font-size:11px;"></div>
+    </div>
+
+    <!-- Filter pra suggestions -->
+    <div style="background:#1a1408;border:1px solid #4a3826;padding:8px 10px;border-radius:4px;margin-bottom:8px;font-size:11px;">
+      <strong style="color:#f4c95d;">Filtrar suggestions:</strong>
+      <label style="margin-left:8px;"><input type="radio" name="namingFilter" value="all" checked> All</label>
+      <label style="margin-left:8px;"><input type="radio" name="namingFilter" value="in-game"> 🟢 In-game (precisa update js)</label>
+      <label style="margin-left:8px;"><input type="radio" name="namingFilter" value="orphan"> 🟡 Órfãos (safe)</label>
     </div>
 
     <!-- Suggestions: rename batch -->
