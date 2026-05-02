@@ -33,12 +33,17 @@ const Api = {
   },
 
   // === Filesystem scan ===
+  // Server primary, Pages fallback (transforma _assets_index.json baked
+  // pro shape {filesystem: [{path, abs}], orphans: []}).
   async listAssets() {
     try {
-      const res = await fetch(API_BASE + '/list_assets');
-      if (!res.ok) return null;
-      return await res.json();
-    } catch (e) { return null; }
+      const res = await fetch(API_BASE + '/list_assets', {signal: AbortSignal.timeout(2000)});
+      if (res.ok) return await res.json();
+    } catch (e) {}
+    return await _loadFromPagesIndex((idx, cfg) => ({
+      filesystem: idx.items.map(it => ({path: cfg.pages + '/' + it.path, abs: it.path})),
+      orphans: [],
+    }));
   },
 
   // === MCP Queue persistence ===
@@ -89,8 +94,38 @@ const Api = {
   },
 
   // === Scan in-game assets (regex em js/*.js pra detectar refs reais) ===
-  scanInGameAssets() {
-    return fetch(API_BASE + '/scan_in_game_assets', { signal: AbortSignal.timeout(8000) })
-      .then(r => r.json());
+  // Server primary, Pages fallback (le inGame flag de _assets_index.json baked).
+  async scanInGameAssets() {
+    try {
+      const res = await fetch(API_BASE + '/scan_in_game_assets', {signal: AbortSignal.timeout(2000)});
+      if (res.ok) return await res.json();
+    } catch (e) {}
+    return await _loadFromPagesIndex(idx => ({
+      paths: Object.fromEntries(idx.items.map(it => [it.path, !!it.inGame])),
+    }));
   },
 };
+
+// === Pages fallback helper: cache do _assets_index.json baked ===
+let _pagesIndexCache = null;
+let _pagesIndexFetchedAt = 0;
+let _pagesIndexSlug = null;
+document.addEventListener('pixapro:project-changed', () => {
+  _pagesIndexCache = null;
+  _pagesIndexFetchedAt = 0;
+  _pagesIndexSlug = null;
+});
+async function _loadFromPagesIndex(transform) {
+  const cfg = window.PixaProjects?.getActiveCfg?.();
+  if (!cfg?.pages) return null;
+  if (_pagesIndexCache && (Date.now() - _pagesIndexFetchedAt) < 60000) {
+    return transform(_pagesIndexCache, cfg);
+  }
+  try {
+    const r = await fetch(cfg.pages + '/data/_assets_index.json');
+    if (!r.ok) return null;
+    _pagesIndexCache = await r.json();
+    _pagesIndexFetchedAt = Date.now();
+    return transform(_pagesIndexCache, cfg);
+  } catch (e) { return null; }
+}
