@@ -362,11 +362,15 @@ class Handler(SimpleHTTPRequestHandler):
 
 
 def main():
-    # 8080 é reservada pro game. Tools rodam em 8090 por default.
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 8090
+    # 8080 = projetos jogo. 8090 = project server (gallery_server.py do projeto host).
+    # PixaPro UI roda em 8089 por default. Override com [port] se precisar.
+    port = int(sys.argv[1]) if len(sys.argv) > 1 else 8089
     if port == 8080:
-        print("ERRO: porta 8080 é reservada pro game. Use outra porta (default 8090).")
+        print("ERRO: porta 8080 reservada pra games. Use outra (default 8089).")
         sys.exit(1)
+    if port == 8090:
+        print("AVISO: porta 8090 e o padrao do project server (gallery_server.py).")
+        print("       Pode conflitar se Chapada Escapade tambem estiver rodando.")
     print(f"Serving {ROOT} at http://localhost:{port}")
     print(f"  PixaPro: http://localhost:{port}/")
     print(f"  Assets:  {ASSET_ROOT}")
