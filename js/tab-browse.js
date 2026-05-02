@@ -46,18 +46,62 @@
       cats.map(([k, v]) => `<option value="${escHtml(k)}"${k === current ? ' selected' : ''}>${escHtml(k)} (${v})</option>`).join('');
   }
 
+  // Parse search query: separa "key:value" tokens dos free-text tokens
+  // ex: "char:cow walk dir:N" -> {tags: {char:'cow', dir:'N'}, text: 'walk'}
+  function parseQuery(q) {
+    const tokens = q.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    const tagFilters = {};
+    const textParts = [];
+    const negTags = {};
+    for (const t of tokens) {
+      // Negation: -key:value (exclude) ou -text (exclude)
+      const isNeg = t.startsWith('-');
+      const tok = isNeg ? t.slice(1) : t;
+      const m = tok.match(/^([a-z_]+):(.+)$/);
+      if (m) {
+        const [, key, value] = m;
+        if (isNeg) negTags[key] = value;
+        else tagFilters[key] = value;
+      } else if (tok) {
+        textParts.push(isNeg ? '-' + tok : tok);
+      }
+    }
+    return {tagFilters, negTags, textParts};
+  }
+
+  // Match tag value (case-insensitive, numeric-aware)
+  function matchTag(actual, expected) {
+    if (actual == null) return false;
+    return String(actual).toLowerCase() === expected.toLowerCase();
+  }
+
   function applyFilters() {
     if (!_data) return;
     const cat = $('browseFilterCat')?.value || '';
     const ig = $('browseFilterInGame')?.value || '';
-    const search = ($('browseSearch')?.value || '').toLowerCase().trim();
+    const rawSearch = ($('browseSearch')?.value || '').trim();
+    const {tagFilters, negTags, textParts} = parseQuery(rawSearch);
     _filtered = (_data.items || []).filter(it => {
       if (cat && it.category !== cat) return false;
       if (ig === 'true' && !it.inGame) return false;
       if (ig === 'false' && it.inGame) return false;
-      if (search) {
-        const hay = (it.path + ' ' + JSON.stringify(it.tags || {})).toLowerCase();
-        if (!hay.includes(search)) return false;
+      const tags = it.tags || {};
+      // Tag filters: TODOS precisam matchear
+      for (const [k, v] of Object.entries(tagFilters)) {
+        if (!matchTag(tags[k], v)) return false;
+      }
+      // Negative tag filters: NENHUM pode matchear
+      for (const [k, v] of Object.entries(negTags)) {
+        if (matchTag(tags[k], v)) return false;
+      }
+      // Free text: substring no path
+      const lcPath = it.path.toLowerCase();
+      for (const t of textParts) {
+        if (t.startsWith('-')) {
+          if (lcPath.includes(t.slice(1))) return false;
+        } else {
+          if (!lcPath.includes(t)) return false;
+        }
       }
       return true;
     });

@@ -420,8 +420,12 @@
         </select>
       </label>
       <label>
-        <span style="color:#f4c95d;display:block;margin-bottom:4px;">Search (path/name/tag)</span>
-        <input type="text" id="browseSearch" placeholder="ex: cow, fence_v2, ufo, wang_05..." style="width:100%;background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;font-family:monospace;font-size:11px;">
+        <span style="color:#f4c95d;display:block;margin-bottom:4px;">Search (text + key:value)</span>
+        <input type="text" id="browseSearch" placeholder="ex: cow, dir:N, char:ufo, frame:0, -wang_meta" style="width:100%;background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;font-family:monospace;font-size:11px;">
+        <div style="font-size:10px;opacity:.5;margin-top:3px;">
+          tag filters: <code>char:cow</code> · <code>dir:N</code> · <code>anim:walk</code> · <code>frame:0</code> · <code>style:dirt_grass_32</code> · <code>bits:5</code><br>
+          negar: <code>-orphan</code> · <code>-dir:N</code> · combinar com texto livre
+        </div>
       </label>
       <label>
         <span style="color:#f4c95d;display:block;margin-bottom:4px;">View</span>
