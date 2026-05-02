@@ -68,11 +68,14 @@
       }
       const srcLabel = result.source === 'server' ? '(local · read+write)' : '(Pages · read-only)';
       setStatus(`✓ ${maps.length} presets · ${proj} · ${srcLabel}`);
-      // Disable save UI se for read-only
+      // Save UI: enable se server local OU PAT configurado
       const saveBtn = document.getElementById('btnSaveMapPreset');
       if (saveBtn) {
-        saveBtn.disabled = (result.source === 'pages');
-        saveBtn.title = result.source === 'pages' ? 'Save requer project_server.py local rodando' : '';
+        const canWrite = result.source === 'server' || (window.PixaGithubApi && window.PixaGithubApi.hasPat());
+        saveBtn.disabled = !canWrite;
+        saveBtn.title = canWrite
+          ? (result.source === 'server' ? 'Save via local server' : 'Save via GitHub API (PAT)')
+          : 'Save requer project_server.py local OU PAT configurado (🔑 GitHub no header)';
       }
     } catch (e) {
       list.innerHTML = '';
@@ -145,21 +148,48 @@
       // tileStyle: opcional -- se vazio, game usa seu proprio fx.tileStyle
       tileStyle: '',
     };
-    // Save EXIGE local server (Pages e read-only)
-    const url = `${activeProjectCfg().server}/maps/${encodeURIComponent(name)}?project=${activeProject()}`;
+    // Save: tenta server local primeiro, senao usa GitHub API (se PAT setup)
+    const cfg = activeProjectCfg();
+    // Path 1: server local
     try {
-      const r = await fetch(url, {
+      const r = await fetch(`${cfg.server}/maps/${encodeURIComponent(name)}?project=${activeProject()}`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(preset),
+        signal: AbortSignal.timeout(2000),
       });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const data = await r.json();
-      setStatus(`✓ saved "${name}" -> ${data.path} · roda \`python tools/bake_indexes.py\` + commit pra Pages servir`);
-      refreshMapList();
-    } catch (e) {
-      setStatus(`✗ save fail: ${e.message} -- precisa project_server.py rodando local`, false);
+      if (r.ok) {
+        const data = await r.json();
+        setStatus(`✓ saved "${name}" via local server · ${data.path}`);
+        refreshMapList();
+        return;
+      }
+    } catch {}
+    // Path 2: GitHub API (se PAT configurado)
+    if (window.PixaGithubApi && window.PixaGithubApi.hasPat() && cfg.pages) {
+      const repo = window.PixaGithubApi.parsePagesUrl(cfg.pages);
+      if (!repo) {
+        setStatus(`✗ pages URL invalida: ${cfg.pages}`, false);
+        return;
+      }
+      setStatus(`🔄 saving via GitHub API (${repo.owner}/${repo.repo})...`);
+      try {
+        const path = `data/maps/${name}.json`;
+        const content = JSON.stringify(preset, null, 2) + '\n';
+        const result = await window.PixaGithubApi.saveTextFile(
+          repo.owner, repo.repo, path, content,
+          `feat(maps): save preset "${name}" via PixaPro`,
+        );
+        setStatus(`✓ saved "${name}" via GitHub API · commit ${result.commit?.sha?.slice(0,7) || ''} · GitHub Action vai re-bake _index.json em ~30s`);
+        // Espera um pouco antes de refresh pra Pages atualizar
+        setTimeout(refreshMapList, 3000);
+      } catch (e) {
+        setStatus(`✗ GitHub API save fail: ${e.message}`, false);
+      }
+      return;
     }
+    // Path 3: nada disponivel
+    setStatus(`✗ save indisponivel · rode \`python tools/project_server.py\` local OU configure GitHub PAT (botao 🔑 GitHub no header)`, false);
   }
 
   // Auto-init quando o usuario abre a aba Map

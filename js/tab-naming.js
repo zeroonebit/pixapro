@@ -45,11 +45,19 @@
     renderUnclassified();
     const srcLabel = result.source === 'server' ? '(local · read+write)' : '(Pages · read-only)';
     setStatus(`✓ scan completo: ${_scanData.total} assets, ${_scanData.suggestions.length} renames sugeridos · ${srcLabel}`);
-    // Disable Apply button se for read-only
+    // Apply buttons: enable se server local OU PAT configurado
+    const canWrite = !_readOnly || (window.PixaGithubApi && window.PixaGithubApi.hasPat());
     const applyBtn = document.getElementById('btnNamingApply');
     if (applyBtn) {
-      applyBtn.disabled = _readOnly;
-      applyBtn.title = _readOnly ? 'Apply requer project_server.py local rodando' : '';
+      applyBtn.disabled = !canWrite;
+      applyBtn.title = canWrite ? '' : 'Apply requer project_server.py local OU PAT configurado';
+    }
+    const applyRefsBtn = document.getElementById('btnNamingApplyWithRefs');
+    if (applyRefsBtn) {
+      applyRefsBtn.disabled = !canWrite;
+      applyRefsBtn.title = canWrite
+        ? (_readOnly ? 'Apply via GitHub API (Tree commit atomico)' : 'Apply via local server')
+        : 'Apply requer project_server.py local OU PAT configurado';
     }
   }
 
@@ -256,6 +264,91 @@
     }
   }
 
+  // Apply via GitHub API (Tree API pra commit atomico) -- Pages mode
+  async function applyWithRefsViaGithub(renames, cfg) {
+    const repo = window.PixaGithubApi.parsePagesUrl(cfg.pages);
+    if (!repo) {
+      setStatus(`✗ pages URL invalida: ${cfg.pages}`, false);
+      return;
+    }
+    setStatus(`🔄 calculando diff prefixes + js changes...`);
+    // Calcula diff prefixes (mesma logica do project_server)
+    function diffPrefix(from, to) {
+      const fp = from.split('/'), tp = to.split('/');
+      while (fp.length && tp.length && fp[fp.length-1] === tp[tp.length-1]) {
+        fp.pop(); tp.pop();
+      }
+      return [fp.join('/'), tp.join('/')];
+    }
+    const prefixMap = {};
+    for (const r of renames) {
+      const [fp, tp] = diffPrefix(r.from, r.to);
+      if (fp) prefixMap[fp] = tp;
+    }
+    // Fetch js files, calcula updates
+    setStatus(`🔄 fetching js files do GitHub...`);
+    const jsListR = await fetch(`https://api.github.com/repos/${repo.owner}/${repo.repo}/contents/js`, {
+      headers: window.PixaGithubApi.hasPat() ? {Authorization: `Bearer ${window.PixaGithubApi.getPat()}`} : {},
+    });
+    if (!jsListR.ok) {
+      setStatus(`✗ list js dir: HTTP ${jsListR.status}`, false);
+      return;
+    }
+    const jsList = await jsListR.json();
+    const jsFiles = jsList.filter(f => f.name.endsWith('.js'));
+    const jsUpdates = []; // [{path, content}]
+    for (const f of jsFiles) {
+      // GET raw content
+      const fR = await fetch(f.download_url);
+      if (!fR.ok) continue;
+      const original = await fR.text();
+      let updated = original;
+      const replaces = [];
+      for (const [fp, tp] of Object.entries(prefixMap)) {
+        const oldTok = fp + '/';
+        const newTok = tp ? tp + '/' : '';
+        const count = updated.split(oldTok).length - 1;
+        if (count > 0) {
+          updated = updated.split(oldTok).join(newTok);
+          replaces.push({old: oldTok, new: newTok, count});
+        }
+      }
+      if (updated !== original) {
+        jsUpdates.push({path: `js/${f.name}`, content: updated, replaces});
+      }
+    }
+    // Confirm
+    const prefixLines = Object.entries(prefixMap)
+      .map(([from, to]) => `  ${from}/  →  ${to ? to + '/' : '(remove)'}`).join('\n');
+    const jsLines = jsUpdates.map(u => `  ${u.path}: ${u.replaces.reduce((a,r) => a+r.count, 0)} replaces`).join('\n');
+    const msg = `Aplicar via GitHub API (1 commit atomico)?\n\n` +
+      `Repo: ${repo.owner}/${repo.repo}\n` +
+      `📦 PNGs renomes: ${renames.length}\n\n` +
+      `🔄 Prefix changes (${Object.keys(prefixMap).length}):\n${prefixLines || '  (none)'}\n\n` +
+      `📝 JS files a atualizar (${jsUpdates.length}):\n${jsLines || '  (none)'}\n\n` +
+      `1 commit no main · GitHub Action vai re-bake _index.json em ~30s`;
+    if (!confirm(msg)) {
+      setStatus('Cancelado.');
+      return;
+    }
+    // Build operations + executa via batchTreeOperations
+    const operations = [
+      ...renames.map(r => ({action: 'move', from: r.from, to: r.to})),
+      ...jsUpdates.map(u => ({action: 'update', path: u.path, content: u.content})),
+    ];
+    setStatus(`🔄 commit via GitHub API (${operations.length} operations)...`);
+    try {
+      const result = await window.PixaGithubApi.batchTreeOperations(
+        repo.owner, repo.repo, operations,
+        `chore(rename): ${renames.length} pngs + ${jsUpdates.length} js refs via PixaPro`,
+      );
+      setStatus(`✓ commit ${result.commitSha.slice(0,7)} · ${operations.length} ops · GitHub Action re-bake em ~30s · ${result.htmlUrl}`);
+      setTimeout(runScan, 5000);
+    } catch (e) {
+      setStatus(`✗ batch tree fail: ${e.message}`, false);
+    }
+  }
+
   // Apply transacional (PNGs + auto-update JS refs)
   // Usa endpoint POST /apply_renames_with_refs que faz tudo numa transacao,
   // com backup .js + .png e re-bake dos indexes apos.
@@ -264,13 +357,17 @@
       setStatus('Nada selecionado.', false);
       return;
     }
-    if (_readOnly) {
-      setStatus('Apply requer project_server.py local rodando (modo Pages e read-only).', false);
-      return;
-    }
     const renames = Array.from(_selected).map(idx => _scanData.suggestions[idx]).map(s => ({from: s.from, to: s.to}));
     const cfg = activeProjectCfg();
-    // Step 1: dry_run pra preview
+    // Pages mode + PAT? Faz via GitHub API
+    if (_readOnly) {
+      if (window.PixaGithubApi && window.PixaGithubApi.hasPat() && cfg.pages) {
+        return await applyWithRefsViaGithub(renames, cfg);
+      }
+      setStatus('Apply requer project_server.py local OU PAT configurado (🔑 GitHub no header).', false);
+      return;
+    }
+    // Step 1: dry_run pra preview (server local)
     setStatus(`🔍 dry-run: analisando impacto de ${renames.length} renames...`);
     let preview;
     try {

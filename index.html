@@ -21,6 +21,35 @@
   <span id="balanceMeta"></span>
   <button id="btnBalanceRefresh" title="Refresh do server">↻</button>
   <button id="btnBalanceBookmarklet" title="Copia bookmarklet (cola na barra de bookmarks)">📋 Bookmarklet</button>
+  <button id="btnGithubAuth" title="Configurar GitHub PAT pra writes via API (sem precisar server local)" style="margin-left:6px;">🔑 GitHub</button>
+</div>
+
+<!-- ====== MODAL: GitHub PAT setup ====== -->
+<div id="githubModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#2a2218;border:2px solid #6b5234;border-radius:6px;padding:20px;max-width:520px;width:90%;color:#f4c95d;font-family:monospace;font-size:12px;">
+    <h3 style="margin:0 0 10px;">🔑 GitHub Personal Access Token</h3>
+    <p style="opacity:.8;margin:0 0 10px;line-height:1.5;">
+      PAT permite que o PixaPro (deployed em Pages) faça commits via API <strong>sem precisar de project_server local</strong>.
+      Apenas <strong>read+write</strong> via API REST do GitHub.
+    </p>
+    <ol style="opacity:.8;margin:0 0 10px;padding-left:20px;line-height:1.6;">
+      <li>Vai em <a href="https://github.com/settings/tokens?type=beta" target="_blank" style="color:#88ccff;">Settings → Developer settings → Personal access tokens</a></li>
+      <li>Click "Generate new token (classic)" -- só precisa de scope <code style="background:#1a1408;padding:1px 4px;">repo</code></li>
+      <li>Cola aqui:</li>
+    </ol>
+    <input type="password" id="ghPatInput" placeholder="ghp_..." style="width:100%;background:#1a1408;color:#f4c95d;border:1px solid #6b5234;padding:6px;font-family:monospace;font-size:12px;margin-bottom:10px;" />
+    <div id="ghPatStatus" style="font-size:11px;min-height:16px;margin-bottom:10px;"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button id="btnGhPatRemove" style="padding:5px 12px;background:#aa4a44;color:#fff;">🗑 Remove saved</button>
+      <button id="btnGhPatTest" style="padding:5px 12px;background:#3a4a8a;color:#fff;">🧪 Test</button>
+      <button id="btnGhPatSave" style="padding:5px 12px;background:#4a8a44;color:#fff;font-weight:bold;">💾 Save</button>
+      <button id="btnGhPatClose" style="padding:5px 12px;">Cancel</button>
+    </div>
+    <p style="opacity:.5;margin:10px 0 0;font-size:10px;line-height:1.4;">
+      ⚠ PAT fica em <code>localStorage</code> do browser (só local). Não é enviado pra lugar nenhum além da API do GitHub.
+      Pra remover: clica "Remove saved" ou limpa storage.
+    </p>
+  </div>
 </div>
 
 <div class="tabs">
@@ -466,6 +495,8 @@
 <script src="js/tab-editor.js"></script>
 <script src="js/tab-detail.js"></script>
 <script src="js/tab-tiles.js"></script>
+<script src="js/github-api.js"></script>
+<script src="js/github-modal.js"></script>
 <script src="js/projects.js"></script>
 <script src="js/tab-map.js"></script>
 <script src="js/tab-naming.js"></script>
