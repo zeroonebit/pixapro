@@ -256,11 +256,77 @@
     }
   }
 
+  // Apply transacional (PNGs + auto-update JS refs)
+  // Usa endpoint POST /apply_renames_with_refs que faz tudo numa transacao,
+  // com backup .js + .png e re-bake dos indexes apos.
+  async function applyWithRefs() {
+    if (!_scanData || _selected.size === 0) {
+      setStatus('Nada selecionado.', false);
+      return;
+    }
+    if (_readOnly) {
+      setStatus('Apply requer project_server.py local rodando (modo Pages e read-only).', false);
+      return;
+    }
+    const renames = Array.from(_selected).map(idx => _scanData.suggestions[idx]).map(s => ({from: s.from, to: s.to}));
+    const cfg = activeProjectCfg();
+    // Step 1: dry_run pra preview
+    setStatus(`🔍 dry-run: analisando impacto de ${renames.length} renames...`);
+    let preview;
+    try {
+      const r = await fetch(`${cfg.server}/apply_renames_with_refs`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({renames, dry_run: true}),
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      preview = await r.json();
+    } catch (e) {
+      setStatus(`✗ dry-run falhou: ${e.message}`, false);
+      return;
+    }
+    // Step 2: confirm com preview
+    const prefixLines = Object.entries(preview.prefix_changes || {})
+      .map(([from, to]) => `  ${from}/  →  ${to ? to + '/' : '(remove)'}`)
+      .join('\n');
+    const jsLines = (preview.js_changes_preview || [])
+      .map(c => `  ${c.file}: ${c.replacements.reduce((a, r) => a + r.count, 0)} replaces`)
+      .join('\n');
+    const msg = `Aplicar ${renames.length} renames + update JS refs?\n\n` +
+      `📦 PNGs a mover: ${renames.length}\n\n` +
+      `🔄 Prefix changes (${Object.keys(preview.prefix_changes || {}).length}):\n${prefixLines || '  (nenhum)'}\n\n` +
+      `📝 JS files a modificar (${preview.js_files_affected || 0}):\n${jsLines || '  (nenhum)'}\n\n` +
+      `Backup automatico em tools/saves/asset_rename_backup_<ts>/\n` +
+      `Re-bake automatico dos indexes apos.`;
+    if (!confirm(msg)) {
+      setStatus('Cancelado.');
+      return;
+    }
+    // Step 3: apply real
+    setStatus(`🔄 aplicando ${renames.length} renames + update js...`);
+    try {
+      const r = await fetch(`${cfg.server}/apply_renames_with_refs`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({renames, dry_run: false}),
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const data = await r.json();
+      const errCount = (data.renames_errors || []).length;
+      setStatus(`✓ ${data.renames_applied} pngs + ${data.js_files_updated} js files updated · backup: ${data.backup_dir}` + (errCount ? ` · ${errCount} erros` : ''));
+      setTimeout(runScan, 800);
+    } catch (e) {
+      setStatus(`✗ apply falhou: ${e.message}`, false);
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     const btnScan = $('btnNamingScan');
     if (btnScan) btnScan.addEventListener('click', runScan);
     const btnApply = $('btnNamingApply');
     if (btnApply) btnApply.addEventListener('click', applySelected);
+    const btnApplyRefs = $('btnNamingApplyWithRefs');
+    if (btnApplyRefs) btnApplyRefs.addEventListener('click', applyWithRefs);
     const btnCheckRefs = $('btnNamingCheckRefs');
     if (btnCheckRefs) btnCheckRefs.addEventListener('click', checkRefs);
     const btnCloseRefs = $('btnNamingCloseRefs');
