@@ -7,37 +7,15 @@
 
 (function(){
 
-  const PROJECTS = {
-    'chapada-escapade': {
-      server: 'http://localhost:8090',
-      pages:  'https://zeroonebit.github.io/chapada-escapade',
-    },
-  };
-
+  // Multi-project support via window.PixaProjects (js/projects.js).
   let _scanData = null;       // ultimo scan completo (cache em memoria)
   let _selected = new Set();  // suggestions selecionadas pra apply
   let _readOnly = false;      // true se source = Pages (sem write)
 
-  function activeProject() {
-    const sel = document.getElementById('namingProjectSel');
-    return sel ? sel.value : 'chapada-escapade';
-  }
-  function activeProjectCfg() {
-    return PROJECTS[activeProject()] || PROJECTS['chapada-escapade'];
-  }
-  async function fetchWithFallback(serverPath, pagesPath) {
-    const cfg = activeProjectCfg();
-    try {
-      const r = await fetch(cfg.server + serverPath, {signal: AbortSignal.timeout(2000)});
-      if (r.ok) return {data: await r.json(), source: 'server'};
-    } catch {}
-    if (pagesPath) {
-      try {
-        const r = await fetch(cfg.pages + pagesPath);
-        if (r.ok) return {data: await r.json(), source: 'pages'};
-      } catch {}
-    }
-    return null;
+  function activeProject() { return window.PixaProjects.getActiveSlug(); }
+  function activeProjectCfg() { return window.PixaProjects.getActiveCfg(); }
+  function fetchWithFallback(serverPath, pagesPath) {
+    return window.PixaProjects.fetchWithFallback(serverPath, pagesPath);
   }
   function $(id) { return document.getElementById(id); }
   function escHtml(s) {
@@ -287,12 +265,13 @@
       _selected.clear();
       updateSelectedCount();
     });
-    const projSel = $('namingProjectSel');
-    if (projSel) projSel.addEventListener('change', runScan);
+    // dropdown auto-populated por projects.js (data-pixa-projects)
     // Auto-scan quando user clica na aba
     document.querySelectorAll('.tab[data-tab="naming"]').forEach(b => {
       b.addEventListener('click', () => setTimeout(runScan, 100));
     });
+    // Re-scan quando user troca de projeto via dropdown
+    document.addEventListener('pixapro:project-changed', runScan);
   });
 
 })();

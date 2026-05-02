@@ -13,39 +13,13 @@
 
 (function(){
 
-  // PROJECT URLs: cada projeto tem 2 endpoints possiveis:
-  //   - server: project_server.py local (read+write)
-  //   - pages:  GitHub Pages do projeto (read-only via _index.json)
-  // Usa server primeiro; se falhar (offline), fallback pra pages.
-  const PROJECTS = {
-    'chapada-escapade': {
-      server: 'http://localhost:8090',
-      pages:  'https://zeroonebit.github.io/chapada-escapade',
-    },
-  };
-
-  function activeProject() {
-    const sel = document.getElementById('mapProjectSel');
-    return sel ? sel.value : 'chapada-escapade';
-  }
-  function activeProjectCfg() {
-    return PROJECTS[activeProject()] || PROJECTS['chapada-escapade'];
-  }
-  // Fetch tenta server local primeiro (suporta write). Se 4xx/5xx/network
-  // error, fallback pra Pages (read-only). Retorna {data, source}.
-  async function fetchWithFallback(serverPath, pagesPath) {
-    const cfg = activeProjectCfg();
-    try {
-      const r = await fetch(cfg.server + serverPath, {signal: AbortSignal.timeout(2000)});
-      if (r.ok) return {data: await r.json(), source: 'server'};
-    } catch {}
-    if (pagesPath) {
-      try {
-        const r = await fetch(cfg.pages + pagesPath);
-        if (r.ok) return {data: await r.json(), source: 'pages'};
-      } catch {}
-    }
-    return null;
+  // Multi-project support via window.PixaProjects (js/projects.js).
+  // Le linkedProjects de window.PIXAPRO_CFG (config.js).
+  // fetchWithFallback: tenta server local -> Pages (read-only).
+  function activeProject() { return window.PixaProjects.getActiveSlug(); }
+  function activeProjectCfg() { return window.PixaProjects.getActiveCfg(); }
+  function fetchWithFallback(serverPath, pagesPath) {
+    return window.PixaProjects.fetchWithFallback(serverPath, pagesPath);
   }
 
   function setStatus(msg, ok=true) {
@@ -190,8 +164,7 @@
 
   // Auto-init quando o usuario abre a aba Map
   document.addEventListener('DOMContentLoaded', () => {
-    const projSel = document.getElementById('mapProjectSel');
-    if (projSel) projSel.addEventListener('change', refreshMapList);
+    // dropdown auto-populated por projects.js (data-pixa-projects)
     const refreshBtn = document.getElementById('btnRefreshProjectMaps');
     if (refreshBtn) refreshBtn.addEventListener('click', refreshMapList);
     const saveBtn = document.getElementById('btnSaveMapPreset');
@@ -200,6 +173,8 @@
     document.querySelectorAll('.tab[data-tab="map"]').forEach(b => {
       b.addEventListener('click', () => setTimeout(refreshMapList, 100));
     });
+    // Re-fetch quando user troca de projeto via dropdown
+    document.addEventListener('pixapro:project-changed', refreshMapList);
   });
 
 })();
