@@ -96,7 +96,7 @@ function buildGroupPopupHTML(folder, classified, opts={}){
   flat.forEach(entry => {
     const tip = (typeof labelMap[entry.type] === 'function' ? labelMap[entry.type](entry) : labelMap[entry.type]) + ' · ' + entry.item.name;
     const cls = opts.clickable ? ' data-click="1"' : '';
-    html += `<img src="${entry.item.path}" title="${tip}" style="${styleMap[entry.type]||''}" data-path="${entry.item.path}"${cls}>`;
+    html += `<img src="${assetUrl(entry.item.path)}" title="${tip}" style="${styleMap[entry.type]||''}" data-path="${entry.item.path}"${cls}>`;
   });
   return html;
 }

@@ -80,7 +80,7 @@ function render(){
   $("id").textContent = a.id;
 
   if(a.status === "ready"){
-    $("img").src = a.path || API_URL(a.id);
+    $("img").src = a.path ? assetUrl(a.path) : API_URL(a.id);
     $("img").style.display = "block";
     $("pending").style.display = "none";
   } else {

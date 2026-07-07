@@ -74,7 +74,7 @@ function renderDetailList(){
       const t = document.createElement('div');
       t.className = 'thumb' + (detailSelected?.path === a.path ? ' active' : '');
       const img = document.createElement('img');
-      img.src = a.path;
+      img.src = assetUrl(a.path);
       t.appendChild(img);
       t.title = a.name;
       t.onclick = () => { detailSelected = a; renderDetailList(); renderDetailMain(); };
@@ -88,7 +88,7 @@ function renderDetailList(){
       t.className = 'thumb' + (detailSelected?.path === parent.path ? ' active' : '');
       t.style.borderColor = '#f4c95d';
       const img = document.createElement('img');
-      img.src = parent.path;
+      img.src = assetUrl(parent.path);
       t.appendChild(img);
       t.title = `${folder} · click pra selecionar parent (${fitems.length})`;
       t.onclick = () => { detailSelected = {...parent, target: folder.split('/').pop()}; renderDetailList(); renderDetailMain(); };
@@ -120,7 +120,7 @@ function renderDetailMain(){
   const dirSlots = Object.keys(dirVariants).map(d => {
     const path = dirVariants[d];
     const cls = path ? 'exists' : 'missing';
-    const inner = path ? `<img src="${path}" alt="${d}">` : `+`;
+    const inner = path ? `<img src="${assetUrl(path)}" alt="${d}">` : `+`;
     return `<div class="dir-slot dir-${dirShort[d]} ${cls}" data-dir="${d}" data-asset-path="${a.path}" title="${d}${path?' (existe)':' (gerar via MCP)'}">${inner}</div>`;
   }).join('');
 
@@ -129,7 +129,7 @@ function renderDetailMain(){
     <div class="preview">
       <div class="visualizer">
         <div class="name-overlay">${a.name}</div>
-        <img class="main-sprite" src="${a.path}" alt="${a.name}">
+        <img class="main-sprite" src="${assetUrl(a.path)}" alt="${a.name}">
         <div class="dir-overlay">${dirSlots}</div>
       </div>
       <div class="dir-preview" id="dirPreview">

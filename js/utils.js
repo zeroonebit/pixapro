@@ -57,6 +57,26 @@ const TYPE_ICONS = {
   rocks: '🪨', signs: '🪧', hud: '📺', inbox: '📥', misc: '🔮', unknown: '❓'
 };
 
+// URL REAL de um asset do projeto ativo — o fix dos thumbs 404.
+// Herança do spinoff: na era embedded a UI era servida pelo próprio
+// gallery_server (8090) e paths '../assets/...' resolviam same-origin;
+// no standalone (8089) os fetches ganharam API_BASE mas os img.src
+// ficaram crus → 404 em massa (Gallery/Audit/Editor).
+// Aceita: '../assets/...' (legacy do /list_assets), 'assets/...' limpo,
+// absoluto http(s) e data: (passam direto).
+// Local (http) prefere o server do projeto; deployed (https/Pages)
+// prefere o pages — <img> não precisa de CORS, só de um host que sirva.
+function assetUrl(path){
+  if(!path) return '';
+  if(/^(https?:)?\/\//.test(path) || path.startsWith('data:')) return path;
+  const rel = path.replace(/^(\.\.\/)+/, '').replace(/^\/+/, '');
+  const cfg = (window.PixaProjects && window.PixaProjects.getActiveCfg && window.PixaProjects.getActiveCfg()) || {};
+  const local = cfg.server || (window.PIXAPRO_CFG && window.PIXAPRO_CFG.server_url) || '';
+  const pages = cfg.pages || '';
+  const base = (location.protocol === 'https:') ? (pages || local) : (local || pages);
+  return base ? `${base}/${rel}` : rel;
+}
+
 // PRNG simples (mulberry32) — seed determinística pra terrain test render
 function mulberry32(seed){
   return function(){

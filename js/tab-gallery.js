@@ -223,7 +223,7 @@ async function renderInGamePanel(){
     wrap.style.borderWidth = '2px';
     wrap.title = it.name + (it.isAnimGroup ? ` (${it.count} frames)` : '');
     const img = document.createElement('img');
-    img.src = it.path;
+    img.src = assetUrl(it.path);
     wrap.appendChild(img);
     if (it.isAnimGroup || it.isDirGroup) {
       const badge = document.createElement('span');

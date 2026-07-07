@@ -365,8 +365,21 @@
             <option value="value-2">Value noise · 2</option>
             <option value="value-4">Value noise · 4 (organic)</option>
             <option value="value-8">Value noise · 8 (continentes)</option>
+            <option value="island-bevy">🏝 Ilha Bevy (procedural)</option>
           </select>
-          <span style="font-size:11px;opacity:.5;">CA = smoothing · Value = block size</span>
+          <span style="font-size:11px;opacity:.5;">CA = smoothing · Value = block size · Ilha = gerador do Bevy edition</span>
+        </div>
+        <!-- Controles do modo Ilha Bevy (map-island.js mostra/esconde) -->
+        <div id="islandControls" style="display:none;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 12px;">
+          <label style="font-size:12px;color:#a89368;">Água:</label>
+          <input type="range" id="islandWater" min="15" max="50" value="34" style="width:90px;">
+          <span id="islandWaterVal" style="font-size:12px;">34%</span>
+          <label style="font-size:12px;color:#a89368;">Aridez:</label>
+          <input type="range" id="islandMoisture" min="20" max="70" value="30" style="width:90px;">
+          <span id="islandMoistureVal" style="font-size:12px;">30%</span>
+          <label style="font-size:12px;color:#a89368;display:flex;align-items:center;gap:4px;">
+            <input type="checkbox" id="islandRound" checked> minimapa redondo (radar)
+          </label>
         </div>
         <canvas id="testCanvas" width="640" height="480" style="display:block;margin:0 auto;background:#2a2218;border:2px solid #4a3826;image-rendering:pixelated;max-width:100%;"></canvas>
         <div style="font-size:11px;opacity:.6;text-align:center;margin-top:6px;">cada cell = 4 cantos → tile cr31 (NW=1 NE=2 SE=4 SW=8)</div>
@@ -581,6 +594,7 @@
 <script src="js/github-modal.js"></script>
 <script src="js/projects.js"></script>
 <script src="js/tab-map.js"></script>
+<script src="js/map-island.js"></script>
 <script src="js/tab-naming.js"></script>
 <script src="js/tab-browse.js"></script>
 <script src="js/tab-bevy.js"></script>

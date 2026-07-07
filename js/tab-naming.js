@@ -290,7 +290,7 @@
     for (const r of renames) {
       const [fp, tp] = diffPrefix(r.from, r.to);
       if (!fp) continue;
-      const key = fp + ' ' + tp;
+      const key = fp + '\u0000' + tp;
       groupCounts[key] = (groupCounts[key] || 0) + 1;
     }
     const prefixMap = {};
@@ -298,7 +298,7 @@
     for (const r of renames) {
       const [fp, tp] = diffPrefix(r.from, r.to);
       if (!fp) continue;
-      const key = fp + ' ' + tp;
+      const key = fp + '\u0000' + tp;
       const segs = fp.split('/').length;
       if (groupCounts[key] >= 2 || segs >= 4) {
         prefixMap[fp] = tp;

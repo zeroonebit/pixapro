@@ -9,7 +9,7 @@ function _simpleThumb(path, title, size=42){
   t.className = 'thumb';
   t.style.width = size+'px'; t.style.height = size+'px';
   const img = document.createElement('img');
-  img.src = path;
+  img.src = assetUrl(path);
   t.appendChild(img);
   t.title = title;
   return t;
@@ -30,7 +30,7 @@ function makeThumb(m, i){
   t.className = "thumb" + (i===idx?" active":"") + (m.status==="pending"?" pending":"");
   if(m.status === "ready"){
     const img = document.createElement("img");
-    img.src = m.path || API_URL(m.id);
+    img.src = m.path ? assetUrl(m.path) : API_URL(m.id);
     t.appendChild(img);
   } else {
     t.textContent = "…";
@@ -117,7 +117,7 @@ function fillSumGrid(id, items, mode='folders'){
       t.style.width = '42px'; t.style.height = '42px';
       t.style.borderColor = '#f4c95d';
       const img = document.createElement('img');
-      img.src = parent.path;
+      img.src = assetUrl(parent.path);
       t.appendChild(img);
       t.title = `${folder} (${fitems.length} files)`;
       const badge = document.createElement('span');

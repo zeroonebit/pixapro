@@ -106,6 +106,16 @@
       if (m.gridW && m.gridH && $('testSize')) {
         $('testSize').value = `${m.gridW}x${m.gridH}`;
       }
+      // params do modo Ilha Bevy (map-island.js)
+      if (m.islandWater != null && $('islandWater')) {
+        $('islandWater').value = Math.round(m.islandWater * 100);
+        if ($('islandWaterVal')) $('islandWaterVal').textContent = Math.round(m.islandWater * 100) + '%';
+      }
+      if (m.islandMoisture != null && $('islandMoisture')) {
+        $('islandMoisture').value = Math.round(m.islandMoisture * 100);
+        if ($('islandMoistureVal')) $('islandMoistureVal').textContent = Math.round(m.islandMoisture * 100) + '%';
+      }
+      if (m.islandRound != null && $('islandRound')) $('islandRound').checked = !!m.islandRound;
       if ($('mapNewName')) $('mapNewName').value = m.name;
       if (typeof renderTestMap === 'function') renderTestMap();
       setStatus(`✓ loaded "${name}"`);
@@ -147,6 +157,10 @@
       vertCaPasses,
       // tileStyle: opcional -- se vazio, game usa seu proprio fx.tileStyle
       tileStyle: '',
+      // params do modo Ilha Bevy (só relevantes se bias === 'island-bevy')
+      islandWater: (parseInt($('islandWater')?.value) || 34) / 100,
+      islandMoisture: (parseInt($('islandMoisture')?.value) || 30) / 100,
+      islandRound: $('islandRound')?.checked ?? true,
     };
     // Save: tenta server local primeiro, senao usa GitHub API (se PAT setup)
     const cfg = activeProjectCfg();

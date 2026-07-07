@@ -47,6 +47,10 @@ class Handler(SimpleHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        # Ferramenta de DEV: browser revalida sempre (304 barato em
+        # localhost). Sem isso o Chrome cacheava js/ por heurística e
+        # fixes novos não chegavam sem Ctrl+Shift+R ("não tá funcionando")
+        self.send_header("Cache-Control", "no-cache")
         super().end_headers()
 
     def do_OPTIONS(self):
