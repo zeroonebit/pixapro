@@ -61,6 +61,7 @@
   <button class="tab" data-tab="map">🗺️ Map</button>
   <button class="tab" data-tab="naming">📋 Naming</button>
   <button class="tab" data-tab="browse">🔍 Browse</button>
+  <button class="tab" data-tab="bevy">🎮 Bevy</button>
 </div>
 
 <!-- ====== TAB EDITOR (approved top · visualizer center · tools bottom) ====== -->
@@ -541,6 +542,27 @@
   </div>
 </div><!-- /tab-naming -->
 
+<!-- ====== TAB BEVY (editor de scatter do Bevy edition, server 8091) ====== -->
+<div class="tab-content" id="tab-bevy" hidden>
+  <div style="padding:14px;max-width:1280px;margin:0 auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:6px;">
+      <h3 style="margin:0;">🎮 Bevy edition — scatter manifest (editor in-game)</h3>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <label style="font-size:12px;color:#a89368;">Server:</label>
+        <input type="text" id="bevyServerUrl" value="http://localhost:8091" style="width:190px;background:#2a2218;color:#f4c95d;border:1px solid #6b5234;padding:4px 8px;font-family:monospace;font-size:12px;">
+        <button id="btnBevyRefresh" style="padding:4px 10px;font-size:12px;">↻ Reload</button>
+        <button id="btnBevySave" style="padding:4px 14px;font-size:12px;background:#4a8a44;color:#fff;font-weight:bold;">💾 SAVE → jogo</button>
+      </div>
+    </div>
+    <div style="font-size:11px;opacity:.6;margin-bottom:12px;">
+      Edita <code>assets/manifest/scatter.json</code> do repo Bevy · salvou → o jogo re-scattera sozinho em ~2s (watcher de mtime) ·
+      server: <code>python tools/editor_server.py</code> na raiz do repo Bevy
+    </div>
+    <div id="bevyStatus" style="font-size:11px;margin-bottom:10px;min-height:14px;"></div>
+    <div id="bevyContent"></div>
+  </div>
+</div><!-- /tab-bevy -->
+
 <script src="/config.js"></script>
 <script src="js/constants.js"></script>
 <script src="js/store.js"></script>
@@ -561,6 +583,7 @@
 <script src="js/tab-map.js"></script>
 <script src="js/tab-naming.js"></script>
 <script src="js/tab-browse.js"></script>
+<script src="js/tab-bevy.js"></script>
 <script src="js/balance.js"></script>
 
 </body>

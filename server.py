@@ -36,6 +36,12 @@ CONFIG = json.loads(CFG_FILE.read_text(encoding="utf-8")) if CFG_FILE.exists() e
 
 
 class Handler(SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        # serve SEMPRE da pasta do PixaPro, não do cwd — senão rodar
+        # `python H:/Projects/PixaPro/server.py` de outro projeto servia
+        # os arquivos DESSE projeto (bug real: preview abriu o jogo)
+        super().__init__(*args, directory=str(ROOT), **kwargs)
+
     def end_headers(self):
         # CORS aberto pra dev local (PixaPro UI fala com project_server cross-origin)
         self.send_header("Access-Control-Allow-Origin", "*")
