@@ -192,7 +192,43 @@
     });
   }
 
+  // ── Hover-zoom: thumb 44px → preview flutuante 220px (AR real) ──
+  function setupHoverZoom(){
+    const zoom = document.createElement('div');
+    zoom.style.cssText = 'position:fixed;z-index:9999;pointer-events:none;display:none;background:#1a1408;border:2px solid #6b5234;padding:6px;border-radius:4px;box-shadow:0 4px 18px rgba(0,0,0,.6);';
+    const zimg = document.createElement('img');
+    zimg.style.cssText = 'max-width:220px;max-height:220px;object-fit:contain;image-rendering:pixelated;display:block;';
+    const zlabel = document.createElement('div');
+    zlabel.style.cssText = 'font-family:monospace;font-size:10px;color:#f4c95d;text-align:center;margin-top:4px;max-width:220px;overflow:hidden;text-overflow:ellipsis;';
+    zoom.appendChild(zimg); zoom.appendChild(zlabel);
+    document.body.appendChild(zoom);
+
+    const box = $('bevyContent');
+    if (!box) return;
+    box.addEventListener('mouseover', e => {
+      const img = e.target.closest('img');
+      if (!img || !box.contains(img)) return;
+      zimg.src = img.src;
+      zlabel.textContent = img.title || img.src.split('/').pop();
+      zoom.style.display = 'block';
+    });
+    box.addEventListener('mousemove', e => {
+      if (zoom.style.display === 'none') return;
+      const pad = 18;
+      let x = e.clientX + pad, y = e.clientY + pad;
+      const r = zoom.getBoundingClientRect();
+      if (x + r.width > innerWidth) x = e.clientX - r.width - pad;
+      if (y + r.height > innerHeight) y = e.clientY - r.height - pad;
+      zoom.style.left = x + 'px';
+      zoom.style.top = y + 'px';
+    });
+    box.addEventListener('mouseout', e => {
+      if (e.target.closest('img')) zoom.style.display = 'none';
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
+    setupHoverZoom();
     const urlInput = $('bevyServerUrl');
     if (urlInput) urlInput.value = localStorage.getItem(LS_KEY) || 'http://localhost:8091';
     $('btnBevyRefresh')?.addEventListener('click', refreshBevy);
