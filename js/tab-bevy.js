@@ -192,6 +192,51 @@
     });
   }
 
+  // ── Painel LIVE (Fase 3): runtime_state.json escrito pelo JOGO a
+  // cada 5s → polling 4s aqui (pattern do MCP Live dashboard).
+  // Idade > 15s = jogo parado/fechado.
+  let _liveTimer = null;
+  async function pollLive(){
+    const box = $('bevyLive');
+    if (!box) return;
+    let snap = null;
+    try {
+      const r = await fetch(`${serverUrl()}/tools/saves/runtime_state.json?t=${Date.now()}`, {signal: AbortSignal.timeout(2500)});
+      if (r.ok) snap = await r.json();
+    } catch(e) {}
+    if (!snap){
+      box.innerHTML = `<div style="background:#141a0e;border:1px dashed #3c4a26;border-radius:4px;padding:8px;font-size:11px;opacity:.6;">📡 live: sem runtime_state.json — roda o JOGO (cargo run) que ele escreve a cada 5s</div>`;
+      return;
+    }
+    const age = Math.max(0, Math.floor(Date.now()/1000 - snap.ts));
+    const alive = age < 15;
+    const dot = alive ? '🟢' : '⚫';
+    const chips = Object.entries(snap.counts || {})
+      .map(([k,v]) => `<span style="background:#2a2218;border:1px solid #4a3826;border-radius:10px;padding:1px 8px;font-size:10px;">${k} <b style="color:#f4c95d;">${v}</b></span>`)
+      .join(' ');
+    const scenery = Object.entries(snap.scenery || {}).sort((a,b) => b[1]-a[1]);
+    const maxN = scenery.length ? scenery[0][1] : 1;
+    const bars = scenery.map(([s,n]) => `
+      <div style="display:flex;align-items:center;gap:6px;font-size:10px;font-family:monospace;">
+        <span style="width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s}</span>
+        <div style="flex:1;background:#1a1408;border-radius:2px;height:8px;"><div style="width:${Math.round(n/maxN*100)}%;background:#6a8a4c;height:8px;border-radius:2px;"></div></div>
+        <span style="width:26px;text-align:right;color:#f4c95d;">${n}</span>
+      </div>`).join('');
+    const missing = (snap.missing || []).length
+      ? `<div style="margin-top:6px;font-size:10px;color:#e88;">⚠ sem PNG: ${snap.missing.join(', ')}</div>` : '';
+    box.innerHTML = `
+      <div style="background:#141a0e;border:1px solid #3c4a26;border-radius:4px;padding:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin-bottom:6px;">
+          <h4 style="margin:0;font-size:13px;color:#aad477;">📡 LIVE ${dot} <span style="font-weight:normal;opacity:.7;">${snap.state} · ${Math.round(snap.fps)} fps · há ${age}s</span></h4>
+          <div>${chips}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;max-height:170px;overflow-y:auto;">${bars || '<span style="font-size:10px;opacity:.5;">sem scatter (splash?)</span>'}</div>
+        ${missing}
+      </div>`;
+  }
+  function startLive(){ if (!_liveTimer){ pollLive(); _liveTimer = setInterval(pollLive, 4000); } }
+  function stopLive(){ if (_liveTimer){ clearInterval(_liveTimer); _liveTimer = null; } }
+
   // ── Hover-zoom: thumb 44px → preview flutuante 220px (AR real) ──
   function setupHoverZoom(){
     const zoom = document.createElement('div');
@@ -234,10 +279,16 @@
     $('btnBevyRefresh')?.addEventListener('click', refreshBevy);
     $('btnBevySave')?.addEventListener('click', saveBevy);
     // 1º clique na aba carrega; cliques seguintes NÃO recarregam se tem
-    // edição pendente (não perder o trabalho do user)
-    document.querySelectorAll('.tab[data-tab="bevy"]').forEach(b => {
+    // edição pendente (não perder o trabalho do user). Live poll só
+    // roda com a aba aberta (para nos outros tabs)
+    document.querySelectorAll('.tab').forEach(b => {
       b.addEventListener('click', () => setTimeout(() => {
-        if (!manifest || !dirty) refreshBevy();
+        if (b.dataset.tab === 'bevy'){
+          if (!manifest || !dirty) refreshBevy();
+          startLive();
+        } else {
+          stopLive();
+        }
       }, 100));
     });
   });
